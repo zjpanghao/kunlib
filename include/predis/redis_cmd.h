@@ -66,7 +66,6 @@ class RedisCmd  {
         freeReplyObject(reply);
         return rc;
       }
-      LOG(INFO) << "checkvalid" << reply->type;
       if(reply->type == REDIS_REPLY_STATUS && reply->str && strncmp(reply->str,"PONG", 3) == 0){
         rc = true;
       }

@@ -1,0 +1,6 @@
+set(kunlib /home/panghao/kunlib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY /home/panghao/kunlib/libs)
+include_directories(${kunlib}/include)
+link_directories(${kunlib}/libs)
+add_library(kunconfig SHARED config.cpp)
+target_link_libraries(kunconfig glog)
