@@ -90,7 +90,6 @@ class RedisCmd  {
         return r;
       }
       r = true;
-      LOG(INFO) << "Getvalue " << reply->type;
       if (reply->type == REDIS_REPLY_STRING && reply->len)
         value->assign(reply->str, reply->len);
       freeReplyObject(reply);
