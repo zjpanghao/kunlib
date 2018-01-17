@@ -13,12 +13,11 @@ class Config {
  public:
   Config(const std::string &fileName); 
 
-  void processLine(const char *line); 
-
   std::string get(const std::string &segment, 
                   const std::string &key);
 
  private:
+  void processLine(const char *line); 
   std::string trim(const std::string &buf);
   KeyValueMap *keyMap;
   std::string segmentName;
