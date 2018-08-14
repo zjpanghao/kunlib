@@ -51,6 +51,10 @@
         return cmd_.SetValue(key, value);
       }
 
+      bool Lpush(const std::string &key, const std::string &value) {
+        return cmd_.Lpush(key, value);
+      }
+
       bool SetHashValue(const std::string &hash, const std::string &key, const std::string &value) {
         return cmd_.SetHashValue(hash, key, value);
       }

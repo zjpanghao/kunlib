@@ -139,6 +139,26 @@ class RedisCmd  {
       return r;
     }
 
+    bool Lpush(const std::string &key, const std::string &value) {
+      redisReply* reply;
+      bool r = false;
+      if (!checkContext()) {
+        return r;
+      }
+      reply = (redisReply*)redisCommand(context_,"LPUSH %s %s", key.c_str(), value.c_str());
+
+      if (reply == NULL) {
+        setReplyFatalError();
+        return false;
+      }
+
+      if (reply->type == REDIS_REPLY_STATUS && reply->integer > 0) {
+        r = true;
+      }
+      freeReplyObject(reply);
+      return r;
+    }
+
     void  setReplyFatalError() {
       fatal_error_ = true;
     }
