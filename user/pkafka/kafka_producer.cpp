@@ -85,9 +85,8 @@ int KafkaProducer::Send(const char *topic, char *buf, int len, int partition) {
       char log_buf[512];
       snprintf(log_buf, 
                sizeof(log_buf),
-	       "%% Failed to produce to topic %s"
-	       "partition %i: %s\n",
-		rd_kafka_err2str(rd_kafka_errno2err(errno)));
+	       "%% Failed to produce to topic %s partition %i: %s\n",
+		rd_kafka_topic_name(rkt), partition, rd_kafka_err2str(rd_kafka_errno2err(errno)));
       /* Poll to handle delivery reports */
       rc = -1;
         /* Destroy topic */
