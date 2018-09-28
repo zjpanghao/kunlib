@@ -47,20 +47,20 @@ std::string Base64::encode(const std::vector<unsigned char> &data) {
   return result;
 }
 
-void Base64::decode(std::string &inData, std::vector<unsigned char> &data) {
-  if (data.size() % 4 != 0) {
+void Base64::decode(const std::string &inData, std::vector<unsigned char> &data) {
+  if (inData.size() % 4 != 0) {
     return;
   }
-  data.reserve((data.size() + 3 / 4) * 3);
+  data.reserve((inData.size() + 3 / 4) * 3);
   for (int i = 0; i < inData.size(); i+= 4) {
-    data.push_back(vtable[inData[i]] << 2 | vtable[inData[i + 1] >> 4]); 
-    if (data[i + 2] != '=') {
-      data.push_back((vtable[inData[i + 1]] & 0xf) << 4 | vtable[inData[i + 2] >> 2]); 
+    data.push_back(vtable[inData[i]] << 2 | vtable[inData[i + 1]] >> 4); 
+    if (inData[i + 2] != '=') {
+      data.push_back((vtable[inData[i + 1]]) << 4 | vtable[inData[i + 2]] >> 2); 
     } else {
       break;
     }
-    if (data[i + 3] != '=') {
-      data.push_back((vtable[inData[i + 2]] & 0x3) << 6 | (vtable[inData[i + 3] & 0x3f])); 
+    if (inData[i + 3] != '=') {
+      data.push_back((vtable[inData[i + 2]]) << 6 | (vtable[inData[i + 3]])); 
     } else {
       break;
     }

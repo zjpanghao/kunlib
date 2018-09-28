@@ -14,7 +14,7 @@ int KafkaProducer::Init(std::string brokers, std::string topic, std::string grou
     if (RD_KAFKA_CONF_OK != rd_kafka_conf_set(conf, "group.id", group.c_str(), NULL, 0))
       return -2;
     rd_kafka_conf_set(conf, "queued.min.messages", "1000000", NULL, 0);	
-    rd_kafka_conf_set(conf, "message.max.bytes", "3000000", NULL, 0);	
+    //rd_kafka_conf_set(conf, "message.max.bytes", "3000000", NULL, 0);	
     /* Create Kafka handle */
     if (!(kafka_control_.control = rd_kafka_new(RD_KAFKA_PRODUCER, conf,
 	                    errstr, sizeof(errstr)))) {
