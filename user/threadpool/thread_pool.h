@@ -7,12 +7,15 @@
 #include <memory>
 #include <mutex>
 #include <condition_variable>
-
+#define MAX_NUM_SAVE 10000
 class Runnable {
  public:
   virtual ~Runnable() {
   }
   virtual void Run() {
+  }
+  virtual void ErrorMsg(int code, const std::string &message) {
+
   }
 };
 
@@ -37,10 +40,20 @@ class ExecutorService {
 
   }
 
-  void Execute(std::unique_ptr<Runnable> able) {
+  bool Execute(std::unique_ptr<Runnable> able) {
     std::lock_guard<std::mutex> guard(lock_);
+    if (queue_.size() > MAX_NUM_SAVE) {
+      int half = MAX_NUM_SAVE / 2;
+      while (half-- > 0) {
+        queue_.pop();
+      }
+      static const std::string msg = "queue full";
+      able->ErrorMsg(1, msg);
+      return false;
+    }
     queue_.push(std::move(able));
     cond_.notify_one();
+    return true;
   }
  private:
   std::queue<std::unique_ptr<Runnable> > queue_;

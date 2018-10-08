@@ -4,7 +4,7 @@
 class Base64 {
  public:
   Base64(); 
-  std::string encode(const std::vector<unsigned char> &data); 
+  void encode(const std::vector<unsigned char> &data, std::string &result); 
   void decode(const std::string &inData, std::vector<unsigned char> &data);
   static Base64 &getBase64();
 

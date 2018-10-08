@@ -18,8 +18,7 @@ Base64 &Base64::getBase64() {
   return base;
 }
 
-std::string Base64::encode(const std::vector<unsigned char> &data) {
-  std::string result;
+void Base64::encode(const std::vector<unsigned char> &data, std::string &result) {
   result.reserve((data.size() + 2)/3*4);
   for (int i = 0; i < data.size(); i++) {
     int d = i % 3;
@@ -44,7 +43,6 @@ std::string Base64::encode(const std::vector<unsigned char> &data) {
        break;
     }
   }
-  return result;
 }
 
 void Base64::decode(const std::string &inData, std::vector<unsigned char> &data) {
