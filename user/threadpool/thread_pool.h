@@ -7,7 +7,7 @@
 #include <memory>
 #include <mutex>
 #include <condition_variable>
-#define MAX_NUM_SAVE 10000
+#define MAX_NUM_SAVE 5000
 class Runnable {
  public:
   virtual ~Runnable() {
@@ -21,11 +21,15 @@ class Runnable {
 
 class ExecutorService {
  public:
-  ExecutorService(int normal) {
-    for (int i = 0; i < normal; i++) {
-      std::thread t(&ExecutorService::Run, this);
-      t.detach();
-    }
+  ExecutorService(int normal) : ExecutorService(normal,MAX_NUM_SAVE) {
+  }
+
+  ExecutorService(int normal, int queueSize) 
+    : queueSize_(queueSize) {
+      for (int i = 0; i < normal; i++) {
+        std::thread t(&ExecutorService::Run, this);
+        t.detach();
+      }
   }
 
   void Run() {
@@ -59,6 +63,7 @@ class ExecutorService {
   std::queue<std::unique_ptr<Runnable> > queue_;
   std::condition_variable  cond_;
   std::mutex lock_;
+  int queueSize_;
 
 };
 
@@ -66,6 +71,9 @@ class Executors {
  public:
   static ExecutorService *NewFixPool(int num) {
     return new ExecutorService(num);
+  }
+  static ExecutorService *NewFixPool(int num, int queueSize) {
+    return new ExecutorService(num, queueSize);
   }
 };
 
