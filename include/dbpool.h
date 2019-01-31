@@ -6,7 +6,7 @@ class DBPool
 {
  public:
   DBPool();
-  int PoolInit(const char *ip, const char *dbname, const char *user, const char *passwd, int poolsize, int initsize, int reapsec);
+  int PoolInit(const char *ip, int port, const char *dbname, const char *user, const char *passwd, int poolsize, int initsize, int reapsec);
   void PoolFree();
   Connection_T GetConnection();
   int PoolSizeGet(int &size);

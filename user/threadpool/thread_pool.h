@@ -46,8 +46,8 @@ class ExecutorService {
 
   bool Execute(std::unique_ptr<Runnable> able) {
     std::lock_guard<std::mutex> guard(lock_);
-    if (queue_.size() > MAX_NUM_SAVE) {
-      int half = MAX_NUM_SAVE / 2;
+    if (queue_.size() > queueSize_) {
+      int half = queueSize_ / 2;
       while (half-- > 0) {
         queue_.pop();
       }
@@ -63,7 +63,7 @@ class ExecutorService {
   std::queue<std::unique_ptr<Runnable> > queue_;
   std::condition_variable  cond_;
   std::mutex lock_;
-  int queueSize_;
+  const int queueSize_;
 
 };
 
