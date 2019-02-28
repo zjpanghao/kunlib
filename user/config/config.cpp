@@ -68,7 +68,7 @@ void Config::processLine(const char *line) {
 }
 
 std::string Config::get(const std::string &segment, 
-    const std::string &key) {
+    const std::string &key) const {
   auto it = configMap.find(segment);
   if (it == configMap.end()) {
     return "";

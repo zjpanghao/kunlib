@@ -18,6 +18,11 @@ DBPool *DBPool::GetInstance() {
   return pinstance;
 }
 
+int DBPool::PoolInit(DataSource *dataSource) {
+  return PoolInit(dataSource->ip().c_str(), dataSource->port(), dataSource->db().c_str(), 
+      dataSource->user().c_str(), dataSource->password().c_str(), 1, 1, 60);
+}
+
 int DBPool::PoolInit(const char *ip, int port, const char *dbname, const char *user, const char *passwd, int poolsize, int initsize, int reapsec) {
   char usr_str[128];
   int rc = 0;
@@ -77,4 +82,8 @@ int DBPool::PoolActiveSizeGet(int &size){
   if(pool)
     size = ConnectionPool_active(pool);
   return 0;
+}
+
+void DBPool::returnConnection(Connection_T conn) {
+  ConnectionPool_returnConnection(pool, conn);
 }

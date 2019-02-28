@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 2.6)
-
 set (KUN /home/panghao/kunlib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${KUN}/libs)
 message(STATUS ${externDir})
 
 # add_definitions(-DMACOSX)
@@ -11,6 +11,7 @@ include_directories(
 					${KUN}/include/ 
 					${KUN}/include/glog
 					${KUN}/include/zdb
+					${KUN}/user
 					)
 
 link_directories(${KUN}/libs

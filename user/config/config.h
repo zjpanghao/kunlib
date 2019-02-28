@@ -14,7 +14,7 @@ class Config {
   Config(const std::string &fileName); 
 
   std::string get(const std::string &segment, 
-                  const std::string &key);
+                  const std::string &key) const;
 
  private:
   void processLine(const char *line); 
