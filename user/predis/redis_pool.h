@@ -17,7 +17,7 @@
         struct timeval ta = {2, 0};
         int rc = 0;
         if ((rc = cmd_.Connect(ip.c_str(), port, ta))!= 0) {
-          LOG(ERROR) << "redis connn error " << rc << " " << ip << port;
+          LOG(ERROR) << "redis connn error " << rc << " " << "ip:" << ip << "port:" <<  port;
           return;
         }
 
@@ -86,7 +86,7 @@
         return now > last_access_ && now - last_access_ > 60;
       }
      private:
-      redisContext *context_;
+      // redisContext *context_;
       RedisCmd   cmd_;
       bool idle_;
       time_t last_access_;
