@@ -4,10 +4,7 @@
 #include <map>
 #include <string>
 #include <mutex>
-struct KafkaControl {
-  rd_kafka_t *control;
-  rd_kafka_topic_t *topic;
-};
+#include "kafka_common.h"
 
 struct KafkaTimeTopic {
   time_t last;
