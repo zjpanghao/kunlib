@@ -10,6 +10,9 @@
 #include <string.h>
 #include <glog/logging.h>
 #include "redis_cmd.h"
+namespace kunyan{
+  class Config;
+}
 
     class RedisControl {
      public:
@@ -49,6 +52,10 @@
       
       bool SetValue(const std::string &key, const std::string &value) {
         return cmd_.SetValue(key, value);
+      }
+
+      bool SetExValue(const std::string &key, int seconds, const std::string &value) {
+        return cmd_.SetExValue(key, seconds, value);
       }
 
       bool Lpush(const std::string &key, const std::string &value) {
@@ -212,4 +219,6 @@ class RedisControlGuard {
    RedisPool *redis_pool_;
 };
 
+void initRedisPool(const kunyan::Config &config); 
+RedisPool* getRedisPool();
 #endif

@@ -119,6 +119,26 @@ class RedisCmd  {
       return r;
     }
 
+    bool SetExValue(const std::string &key, int seconds, const std::string &value) {
+      redisReply* reply;
+      bool r = false;
+      if (!checkContext()) {
+        return r;
+      }
+      reply = (redisReply*)redisCommand(context_,"SETEX %s %d %s", key.c_str(), seconds, value.c_str());
+
+      if (reply == NULL) {
+        setReplyFatalError();
+        return false;
+      }
+
+      if (reply->type == REDIS_REPLY_STATUS && reply->len && strncmp(reply->str, "OK", 2) == 0) {
+        r = true;
+      }
+      freeReplyObject(reply);
+      return r;
+    }
+
     bool SetValue(const std::string &key, const std::string &value) {
       redisReply* reply;
       bool r = false;
