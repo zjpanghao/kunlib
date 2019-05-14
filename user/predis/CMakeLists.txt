@@ -1,0 +1,7 @@
+set(kunlib /home/test/kunlib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY /home/test/kunlib/libs)
+add_definitions(-std=c++11)
+include_directories(${kunlib}/include ${kunlib}/include/hiredis ${kunlib}/user)
+link_directories(${kunlib}/libs)
+add_library(predis SHARED redis_pool.cpp)
+target_link_libraries(predis kunconfig glog)
