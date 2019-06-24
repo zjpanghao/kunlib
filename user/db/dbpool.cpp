@@ -20,7 +20,7 @@ DBPool *DBPool::GetInstance() {
 
 int DBPool::PoolInit(DataSource *dataSource) {
   return PoolInit(dataSource->ip().c_str(), dataSource->port(), dataSource->db().c_str(), 
-      dataSource->user().c_str(), dataSource->password().c_str(), 1, 1, 60);
+      dataSource->user().c_str(), dataSource->password().c_str(), 20, 1, 60);
 }
 
 int DBPool::PoolInit(const char *ip, int port, const char *dbname, const char *user, const char *passwd, int poolsize, int initsize, int reapsec) {
