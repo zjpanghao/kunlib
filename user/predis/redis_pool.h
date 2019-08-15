@@ -24,14 +24,12 @@ namespace kunyan{
           return;
         }
 
-        if (!Auth(password)) {
+        if (password != "" && !Auth(password)) {
           LOG(ERROR) << "error passwd" << password;
-          return;
         }
 
         if (!Select(db)) {
           LOG(ERROR) << "error select" << db;
-          return;
         }
       }
        
@@ -165,7 +163,7 @@ namespace kunyan{
       void ReepThd() {
         while (1) {
           Reep();
-          sleep(30);
+          ::sleep(30);
         }
       }
 
