@@ -1,6 +1,7 @@
 #ifndef DB_POOL_H
 #define DB_POOL_H
 #include <zdb.h>
+#include <memory>
 #include "datasource/dataSource.h"
 class DBPool {
  public:
@@ -19,13 +20,21 @@ class DBPool {
   void returnConnection(Connection_T conn);
   int PoolSizeGet(int &size);
   int PoolActiveSizeGet(int &size);
-  static DBPool *GetInstance();
  
  private:
-  static  DBPool *pinstance;
   ConnectionPool_T  pool;
   URL_T  url;
 
+};
+
+class DBPoolGuard {
+ public:
+   DBPoolGuard(std::shared_ptr<DBPool> pool, Connection_T *conn);
+   ~DBPoolGuard();
+
+ private:
+   std::shared_ptr<DBPool> pool_;
+   Connection_T conn_;
 };
 
 #endif

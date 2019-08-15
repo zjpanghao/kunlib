@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 2.6)
-set (KUN /home/panghao/kunlib)
+set (KUN /home/panghao/github/kunlib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${KUN}/libs)
 message(STATUS ${externDir})
 
