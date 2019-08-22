@@ -4,13 +4,13 @@
 #include <string>
 #include "opencv2/dnn.hpp"
 #include "opencv2/opencv.hpp"
-
+#if INCLUDE_DLIB
 #include <dlib/dnn.h>
 #include <dlib/clustering.h>
 #include <dlib/string.h>
 #include <dlib/image_io.h>
 #include <dlib/image_processing/frontal_face_detector.h>
-
+#endif
 struct FaceLocation {
  public:
   FaceLocation(cv::Rect &rect, double confidence) {
@@ -26,6 +26,7 @@ struct FaceLocation {
   cv::Rect rect_;
   double confidence_;
 };
+#if INCLUDE_DLIB
 using namespace dlib;
 using dlib::tag1;
 using dlib::add_prev2;
@@ -58,22 +59,26 @@ alevel4<
 max_pool<3,3,2,2,dlib::relu<dlib::affine<dlib::con<32,7,7,2,2,
   input_rgb_image_sized<150>
   >>>>>>>>>>>>;
+#endif
 
 
 class FaceApi {
  public:
-  FaceApi(){init();}
+  FaceApi(){}
   int getLocations(const cv::Mat &img, std::vector<FaceLocation> &locations, bool smallFace = false);
   int getFeature(const cv::Mat &img, std::vector<float> &feature);
   float compareFeature(const std::vector<float> &feature, 
                        const std::vector<float> &featureCompare);
- private: 
   int init();
+
+ private: 
   float confidence_{0.7};
   cv::dnn::Net detectNet_;
+#if INCLUDE_DLIB
   dlib::shape_predictor shapePredict_;
-  cv::dnn::Net embeddingNet_;
   anet_type dlibEmbeddingNet_;
+#endif
+  cv::dnn::Net embeddingNet_;
 };
 #endif
 
