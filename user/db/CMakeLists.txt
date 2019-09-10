@@ -9,8 +9,8 @@ include_directories(
 					./include
 					${KUN}/include/ 
 					${KUN}/include/glog
-					${KUN}/include/zdb
 					${KUN}/user
+          /usr/local/include/zdb
 					)
 
 link_directories(${KUN}/libs

@@ -1,6 +1,6 @@
 set (KUN /home/test/github/kunlib)
 add_subdirectory(config)
-add_subdirectory(predis)
 add_subdirectory(pbase64)
 add_subdirectory(pkafka)
 add_subdirectory(db)
+add_subdirectory(predis)
