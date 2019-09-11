@@ -10,7 +10,7 @@ Connection_T DBPool::GetConnection() {
   return ConnectionPool_getConnection((ConnectionPool_S*)pool);
 }
 
-int DBPool::PoolInit(DataSource *dataSource) {
+int DBPool::PoolInit(MysqlDataSource *dataSource) {
   return PoolInit(dataSource->ip().c_str(), dataSource->port(), dataSource->db().c_str(), 
       dataSource->user().c_str(), dataSource->password().c_str(), 20, 1, 60);
 }

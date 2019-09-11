@@ -10,8 +10,11 @@
 #include <string.h>
 #include <glog/logging.h>
 #include "redis_cmd.h"
+#include "redis_pool.h"
+#include "datasource/redisDataSource.h"
 namespace kunyan{
   class Config;
+  class RedisDataSource;
 }
 
     class RedisControl {
@@ -113,6 +116,18 @@ namespace kunyan{
             db_(db),
             password_(password) {
         Init();
+      }
+
+      RedisPool(const RedisDataSource &dataSource) 
+          : normal_size_(dataSource.minSize()), 
+            max_size_(dataSource.maxSize()),
+            active_num_(0),
+            ip_(dataSource.ip()),
+            port_(dataSource.port()),
+            db_(dataSource.db()),
+            password_(dataSource.password()) {
+
+
       }
 
       std::shared_ptr<RedisControl> GetControl() {

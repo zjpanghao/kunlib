@@ -2,7 +2,7 @@
 #define DB_POOL_H
 #include <zdb.h>
 #include <memory>
-#include "datasource/dataSource.h"
+#include "datasource/mysqlDataSource.h"
 class DBPool {
  public:
   DBPool();
@@ -14,7 +14,7 @@ class DBPool {
                int poolsize, 
                int initsize, 
                int reapsec);
-  int PoolInit(DataSource *source);
+  int PoolInit(MysqlDataSource *source);
   void PoolFree();
   Connection_T GetConnection();
   void returnConnection(Connection_T conn);

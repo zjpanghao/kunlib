@@ -12,33 +12,32 @@ class DataSource {
     : ip_(ip), port_(port), db_(db), user_(user), password_(password) {
 
     }
-  DataSource(const kunyan::Config &config) {
-    // mongo
+  DataSource(const std::string &item, const kunyan::Config &config) {
     std::stringstream ss;
     ss.clear();
     ss.str("");
-    ss << config.get("mysql", "ip");
+    ss << config.get(item, "ip");
     ss >> ip_;
 
     ss.clear();
     ss.str("");
-    ss << config.get("mysql", "port");
+    ss << config.get(item, "port");
     std::string portStr(ss.str());
     ss >> port_;
 
     ss.clear();
     ss.str("");
-    ss << config.get("mysql", "db");
+    ss << config.get(item, "db");
     ss >> db_;
 
     ss.clear();
     ss.str("");
-    ss << config.get("mysql", "user");
+    ss << config.get(item, "user");
     ss >> user_;
 
     ss.clear();
     ss.str("");
-    ss << config.get("mysql", "pass");
+    ss << config.get(item, "pass");
     ss >> password_;
   }
 
