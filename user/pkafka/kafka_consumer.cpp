@@ -5,6 +5,30 @@
 #include <glog/logging.h>
 #include <thread>
 
+KafkaConsumer::~KafkaConsumer() {
+}
+
+int KafkaConsumer::stop() {
+  close_ = true;
+  for (int i = 0; i < threads_.size(); i++) {
+    threads_[i]->join();
+    LOG(INFO) << "kafka join thread " << i <<" ok";
+    rd_kafka_consume_stop(kafka_control_.topic, i);
+    LOG(INFO) << "kafka parition " << i << "exit";
+  }
+  if (kafka_control_.control) {
+    if (kafka_control_.topic) {
+      rd_kafka_topic_destroy(kafka_control_.topic);
+      LOG(INFO) << "detroy topic ok";
+    }
+    rd_kafka_destroy(kafka_control_.control);
+    LOG(INFO) << "destry control ok";
+    rd_kafka_wait_destroyed(5000);
+    LOG(INFO) << "rd kafka wait ok";
+  }
+  return 0;
+}
+
 int KafkaConsumer::Init(std::string brokers, std::string topic, std::string group) {
     char errstr[512];
     rd_kafka_topic_conf_t *topic_conf;
@@ -40,8 +64,8 @@ int KafkaConsumer::StartAll() {
       rd_kafka_err2str(rd_kafka_errno2err(errno)));
       return -1;
     }
-    std::thread consumer(&KafkaConsumer::ConsumerThd, this, partition);
-    consumer.detach();
+    std::shared_ptr<std::thread> consumer = std::make_shared<std::thread>(&KafkaConsumer::ConsumerThd, this, partition);
+    threads_.push_back(consumer);
   }
   return 0;
 }
@@ -50,7 +74,7 @@ void KafkaConsumer::ConsumerThd(int partition) {
   KafkaControl *kafka_control = &kafka_control_;
   rd_kafka_topic_t *topic = kafka_control->topic;
   rd_kafka_t *control = kafka_control->control;
-  while (true) {
+  while (!close_) {
     rd_kafka_poll(control, 0);
     rd_kafka_message_t *rkmessage;
     rkmessage = rd_kafka_consume(topic, partition, 1000);

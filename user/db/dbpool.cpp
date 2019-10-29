@@ -1,7 +1,6 @@
 #include "dbpool.h"
 #include <stdio.h>
 #include "glog/logging.h"
-DBPool* DBPool::pinstance = NULL;
 DBPool::DBPool():pool(NULL), url(NULL) {
 }
 
@@ -11,16 +10,9 @@ Connection_T DBPool::GetConnection() {
   return ConnectionPool_getConnection((ConnectionPool_S*)pool);
 }
 
-DBPool *DBPool::GetInstance() {
-  if(pinstance)
-    return pinstance;
-  pinstance = new DBPool();
-  return pinstance;
-}
-
-int DBPool::PoolInit(DataSource *dataSource) {
+int DBPool::PoolInit(MysqlDataSource *dataSource) {
   return PoolInit(dataSource->ip().c_str(), dataSource->port(), dataSource->db().c_str(), 
-      dataSource->user().c_str(), dataSource->password().c_str(), 1, 1, 60);
+      dataSource->user().c_str(), dataSource->password().c_str(), 20, 1, 60);
 }
 
 int DBPool::PoolInit(const char *ip, int port, const char *dbname, const char *user, const char *passwd, int poolsize, int initsize, int reapsec) {
@@ -86,4 +78,19 @@ int DBPool::PoolActiveSizeGet(int &size){
 
 void DBPool::returnConnection(Connection_T conn) {
   ConnectionPool_returnConnection(pool, conn);
+}
+
+DBPoolGuard::DBPoolGuard(std::shared_ptr<DBPool> pool, Connection_T *conn) : pool_(pool), conn_(NULL) {
+  if (pool != nullptr) {
+    *conn = pool->GetConnection();
+    if (*conn) {
+      conn_ = *conn;
+    }
+  }
+}
+
+DBPoolGuard::~DBPoolGuard(){
+  if (pool_ && conn_) {
+    pool_->returnConnection(conn_);
+  }
 }

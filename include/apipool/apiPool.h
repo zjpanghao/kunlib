@@ -10,14 +10,40 @@
 #include <unistd.h>
 #include <mutex>
 #include <condition_variable>
+namespace kunyan {
+ class Config;
+}
 template<class T>
 class ApiBuffer {
  public:
   ApiBuffer() {
   }
+
   int init(int bufferNums) {
     for (int i = 0; i < bufferNums; i++) {
       auto api = getInitApi();
+      api->init();
+      if (api != nullptr) {
+        apis_.push_back(api);
+      }
+    }
+    return apis_.empty() ? -1 : 0; 
+  }
+
+  int init(int bufferNums, const kunyan::Config &config, const std::string &tag) {
+    for (int i = 0; i < bufferNums; i++) {
+      auto api = getInitApi();
+      api->init(config, tag);
+      if (api != nullptr) {
+        apis_.push_back(api);
+      }
+    }
+    return apis_.empty() ? -1 : 0; 
+  }
+  int init(int bufferNums, const kunyan::Config &config) {
+    for (int i = 0; i < bufferNums; i++) {
+      auto api = getInitApi();
+      api->init(config);
       if (api != nullptr) {
         apis_.push_back(api);
       }

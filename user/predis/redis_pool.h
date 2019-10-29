@@ -10,6 +10,12 @@
 #include <string.h>
 #include <glog/logging.h>
 #include "redis_cmd.h"
+#include "redis_pool.h"
+#include "datasource/redisDataSource.h"
+namespace kunyan{
+  class Config;
+  class RedisDataSource;
+}
 
     class RedisControl {
      public:
@@ -21,14 +27,12 @@
           return;
         }
 
-        if (!Auth(password)) {
+        if (password != "" && !Auth(password)) {
           LOG(ERROR) << "error passwd" << password;
-          return;
         }
 
         if (!Select(db)) {
           LOG(ERROR) << "error select" << db;
-          return;
         }
       }
        
@@ -49,6 +53,10 @@
       
       bool SetValue(const std::string &key, const std::string &value) {
         return cmd_.SetValue(key, value);
+      }
+
+      bool SetExValue(const std::string &key, int seconds, const std::string &value) {
+        return cmd_.SetExValue(key, seconds, value);
       }
 
       bool Lpush(const std::string &key, const std::string &value) {
@@ -110,6 +118,18 @@
         Init();
       }
 
+      RedisPool(const RedisDataSource &dataSource) 
+          : normal_size_(dataSource.minSize()), 
+            max_size_(dataSource.maxSize()),
+            active_num_(0),
+            ip_(dataSource.ip()),
+            port_(dataSource.port()),
+            db_(dataSource.db()),
+            password_(dataSource.password()) {
+
+
+      }
+
       std::shared_ptr<RedisControl> GetControl() {
         std::lock_guard<std::mutex> lock(lock_);
         while (!context_pool_.empty()) {
@@ -158,7 +178,7 @@
       void ReepThd() {
         while (1) {
           Reep();
-          sleep(30);
+          ::sleep(30);
         }
       }
 
@@ -212,4 +232,6 @@ class RedisControlGuard {
    RedisPool *redis_pool_;
 };
 
+void initRedisPool(const kunyan::Config &config); 
+RedisPool* getRedisPool();
 #endif
