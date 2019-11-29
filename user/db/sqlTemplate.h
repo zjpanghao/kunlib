@@ -6,7 +6,7 @@
 #include "rowMapper.h"
 #include "glog/logging.h"
 #include <memory>
-#include "preparedStatement.h"
+#include "preparedStmt.h"
 class DBPool;
 class SqlTemplate {
   public:
@@ -17,59 +17,74 @@ class SqlTemplate {
     }
     
     int update(const std::string sql) {
-      PreparedStatement ps(sql);
-      return update(ps);
+      int rc = 0;
+      Connection_T conn; 
+      DBPoolGuard guard(pool_, &conn);
+      if (conn == NULL) {
+        return -1;
+      }
+      TRY {
+        Connection_execute(conn, 
+            sql.c_str());
+      } CATCH(SQLException) {
+        LOG(ERROR) << "conn execute error" << Exception_frame.message;
+        rc = -1;
+      }
+      END_TRY;
+      return rc;
     }
 
-    void setPreparedStatement(const PreparedStatement &ps, PreparedStatement_T p) {
+    void setPreparedStmt(const PreparedStmt &ps, PreparedStatement_T &p) {
       for (int i = 0; i < ps.size(); i++) {
         int inx = i + 1;
         switch(ps.getType(inx)) {
-          case PreparedStatement::ElemType::STRING:
+          case PreparedStmt::ElemType::STRING:
             PreparedStatement_setString(p,                     inx,ps.getString(inx).c_str());
             break;
-          case PreparedStatement::ElemType::INT:
+          case PreparedStmt::ElemType::INT:
             PreparedStatement_setInt(p,                     inx,ps.getInt(inx));
             break;
-
         }
       }
     }
 
-      int update(
-          const PreparedStatement &ps) {
+    int update(
+        const PreparedStmt &ps) {
+      int rc = 0;
+      Connection_T conn; 
+      DBPoolGuard guard(pool_, &conn);
+      if (conn == NULL) {
+        return -1;
+      }
+      TRY {
+        //Connection_execute(conn, "set names utf8"); 
+        PreparedStatement_T p 
+          =  Connection_prepareStatement(conn, ps.sql().c_str());
+        setPreparedStmt(ps, p);
+        PreparedStatement_execute(p);
+      } CATCH(SQLException) {
+        LOG(ERROR) << "execute error" << Exception_frame.message;
+        rc = -1;
+      }
+      END_TRY;
+      return rc;
+    }
+    template <class T>
+      int query(
+          const PreparedStmt &ps,
+          RowMapper<T>   &mapper,
+          std::list<T> &l) {
         int rc = 0;
         Connection_T conn; 
         DBPoolGuard guard(pool_, &conn);
         if (conn == NULL) {
           return -1;
         }
+        ResultSet_T r;
         TRY {
-          PreparedStatement_T p = Connection_prepareStatement(conn, ps.sql().c_str());
-          setPreparedStatement(ps, p);
-          PreparedStatement_execute(p);
-        } CATCH(SQLException) {
-          LOG(ERROR) << "execute error" << Exception_frame.message;
-          rc = -1;
-        }
-        END_TRY;
-        return rc;
-      }
-      template <class T>
-        int query(
-            const PreparedStatement &ps,
-            RowMapper<T>   &mapper,
-            std::list<T> &l) {
-          int rc = 0;
-          Connection_T conn; 
-          DBPoolGuard guard(pool_, &conn);
-          if (conn == NULL) {
-            return -1;
-          }
-          ResultSet_T r;
-          TRY {
-            PreparedStatement_T p = Connection_prepareStatement(conn, ps.sql().c_str());
-            setPreparedStatement(ps, p);
+          PreparedStatement_T p
+            = Connection_prepareStatement(conn, ps.sql().c_str());
+            setPreparedStmt(ps, p);
             r = PreparedStatement_executeQuery(p);
           } CATCH(SQLException) {
             LOG(ERROR) << "load person faces error" << Exception_frame.message;
@@ -101,7 +116,7 @@ class SqlTemplate {
         int query(const std::string sql,
             RowMapper<T>   &mapper,
             std::list<T> &l) {
-          PreparedStatement ps(sql);
+          PreparedStmt ps(sql);
           return query<T>(ps, mapper, l);
           int rc = 0;
           Connection_T conn; 
@@ -111,7 +126,8 @@ class SqlTemplate {
         }
         ResultSet_T r;
         TRY {
-          PreparedStatement_T p = Connection_prepareStatement(conn, sql.c_str());
+          PreparedStatement_T p
+            = Connection_prepareStatement(conn, sql.c_str());
           r = PreparedStatement_executeQuery(p);
         } CATCH(SQLException) {
           LOG(ERROR) << "load person faces error" << Exception_frame.message;

@@ -18,7 +18,7 @@ int DBPool::PoolInit(MysqlDataSource *dataSource) {
 int DBPool::PoolInit(const char *ip, int port, const char *dbname, const char *user, const char *passwd, int poolsize, int initsize, int reapsec) {
   char usr_str[128];
   int rc = 0;
-  snprintf(usr_str, 127, "mysql://%s:%d/%s?user=%s&password=%s", ip, port,  dbname, user, passwd);
+  snprintf(usr_str, 127, "mysql://%s:%d/%s?user=%s&password=%s&charset=utf8", ip, port,  dbname, user, passwd);
   url = URL_new(usr_str);
   if(!url)
     return -1;
