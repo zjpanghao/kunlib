@@ -1,7 +1,7 @@
 #include "evHtpDrv.h"
 #include <signal.h>
 #include "json/json.h"
-#include "urlMap.h"
+#include "generalControl.h"
 
 EvHtpDrv& EvHtpDrv::getDrv() {
   static EvHtpDrv drv;
@@ -38,7 +38,7 @@ void EvHtpDrv::start(
        const std::string &ip,
        int port, 
        int nThread, 
-       const std::vector<std::shared_ptr<UrlMap>> &controls) {
+       const std::vector<std::shared_ptr<GeneralControl>> &controls) {
   if (signal(SIGPIPE, SIG_IGN) 
       == SIG_ERR) {
 		return;

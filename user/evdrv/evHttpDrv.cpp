@@ -3,7 +3,7 @@
 #include <signal.h>
 #include "json/json.h"
 #include "event2/http_struct.h"
-#include "urlMap.h"
+#include "generalControl.h"
 #include <glog/logging.h>
 
 evbuffer *EvHttpDrv::getInputBuffer(
@@ -29,7 +29,7 @@ void EvHttpDrv::start(
     const std::string &ip,
     int port, 
     int nThread, 
-    const std::vector<std::shared_ptr<UrlMap>> &controls) {
+    const std::vector<std::shared_ptr<GeneralControl>> &controls) {
   int fd = 0;
   if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
     return;

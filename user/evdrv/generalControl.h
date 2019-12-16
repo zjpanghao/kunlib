@@ -1,10 +1,14 @@
-#ifndef INCLUDE_URL_MAP_H
-#define INCLUDE_URL_MAP_H
+#ifndef INCLUDE_GENERAL_CONTROL_H
+#define  INCLUDE_GENERAL_CONTROL_H
 #include <map>
 #include <vector>
 #include <string>
 #include <memory>
 #include "json/json.h"
+
+namespace kunyan {
+  class Config;
+}
 
 struct HttpControl {
   std::string url;
@@ -13,10 +17,10 @@ struct HttpControl {
   void *arg;
 };
 
-class UrlMap {
+class GeneralControl{
  public:
   virtual std::vector<HttpControl> getMapping() = 0;
-  virtual ~UrlMap() = default;  
+   virtual ~GeneralControl() = default;
+   virtual int init(const kunyan::Config &config);
 };
-
 #endif

@@ -9,7 +9,7 @@ namespace Json {
  class Value;
 };
 
-class UrlMap;
+class GeneralControl;
 
 struct HttpControl;
 struct evhtp_request;
@@ -27,7 +27,7 @@ class EvDrv {
  public:
    void startServer(
        const kunyan::Config &confg,
-       const std::vector<std::shared_ptr<UrlMap>> &controls);
+       const std::vector<std::shared_ptr<GeneralControl>> &controls);
    virtual ~EvDrv() = default;
    virtual int evReqMethod(EvHttpRequest*req) = 0;
    virtual evbuffer *getInputBuffer(EvHttpRequest *req) = 0;
@@ -37,7 +37,7 @@ class EvDrv {
        const std::string &ip,
        int port, 
        int nThread, 
-       const std::vector<std::shared_ptr<UrlMap>> &controls) = 0;
+       const std::vector<std::shared_ptr<GeneralControl>> &controls) = 0;
   static std::string getBufferStr(struct evbuffer *buf);
   static bool getBufferJson(struct evbuffer *buf, Json::Value &root);
 

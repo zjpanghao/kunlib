@@ -2,10 +2,11 @@
 #include "signal.h"
 #include "glog/logging.h"
 #include "event2/http_struct.h"
-#include "urlMap.h"
+#include "generalControl.h"
 #include "config/config.h"
+
 void EvDrv::startServer(const kunyan::Config &config,
-   const std::vector<std::shared_ptr<UrlMap>> &controls) {
+   const std::vector<std::shared_ptr<GeneralControl>> &controls) {
   std::string portConfig = config.get("server", "port");
   std::string threadConfig = config.get("server", "thread");
   std::stringstream ss;
@@ -27,8 +28,12 @@ void EvDrv::startServer(const kunyan::Config &config,
     ss << threadConfig;
     ss >> threadNum;
   }
+  for (auto &control : controls) {
+    control->init(config);
+  }
   start(ip, port, threadNum, controls);
 }
+
  bool EvDrv::getBufferJson(evbuffer *buffer, Json::Value &root) {
    std::string body = getBufferStr(buffer);
    if (body == "") {

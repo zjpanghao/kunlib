@@ -12,7 +12,7 @@ class EvHtpDrv : public EvDrv{
         const std::string &ip,
         int port, 
         int nThread, 
-        const std::vector<std::shared_ptr<UrlMap>> &controls) override;
+        const std::vector<std::shared_ptr<GeneralControl>> &controls) override;
     static void generalCb(struct evhtp_request*req, void *arg);
     virtual int evReqMethod(EvHttpRequest*req) override;
 };
