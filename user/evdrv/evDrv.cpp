@@ -1,7 +1,7 @@
 #include "evDrv.h"
 #include "signal.h"
 #include "glog/logging.h"
-#include "evhttp.h"
+#include "event2/http_struct.h"
 #include "urlMap.h"
 #include "config/config.h"
 void EvDrv::startServer(const kunyan::Config &config,

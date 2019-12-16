@@ -2,6 +2,7 @@
 #include <thread>
 #include <signal.h>
 #include "json/json.h"
+#include "event2/http_struct.h"
 #include "urlMap.h"
 #include <glog/logging.h>
 

@@ -2,8 +2,8 @@
 #define INCLUDE_EV_DRV_H
 #include <vector>
 #include <memory>
-#include "evhttp.h"
-#include "evhtp.h"
+#include "event2/http.h"
+#include "evhtp/evhtp.h"
 
 namespace Json {
  class Value;
