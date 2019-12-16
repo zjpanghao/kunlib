@@ -1,0 +1,3 @@
+/home/panghao/github/kunlib/user/predis/build/CMakeFiles/rebuild_cache.dir
+/home/panghao/github/kunlib/user/predis/build/CMakeFiles/predis.dir
+/home/panghao/github/kunlib/user/predis/build/CMakeFiles/edit_cache.dir

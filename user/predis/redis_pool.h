@@ -6,7 +6,7 @@
 #include <string>
 #include <list>
 #include <vector>
-#include <hiredis.h>
+#include <hiredis/hiredis.h>
 #include <string.h>
 #include <glog/logging.h>
 #include "redis_cmd.h"

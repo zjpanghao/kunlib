@@ -1,5 +1,5 @@
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${KUN}/libs)
-set(hiredis_DIR /home/test/pg/redis-5.0.4/deps/hiredis)
+set(hiredis_DIR /usr/local/include/hiredis)
 add_definitions(-std=c++11)
 include_directories(${hiredis_DIR} ${KUN}/include ${KUN}/include/hiredis ${KUN}/user)
 link_directories(${KUN}/libs ${hiredis_IDR})
