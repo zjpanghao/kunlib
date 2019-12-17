@@ -10,6 +10,7 @@ Resource &Resource::getResource() {
 void Resource::init(const kunyan::Config &config) {
   redisPool_ = 
     std::make_shared<RedisPool>(RedisDataSource(config));
+  redisPool_->Init();
   dbPool_ = std::make_shared<DBPool>();
   MysqlDataSource ds(config);
   dbPool_->PoolInit(&ds);

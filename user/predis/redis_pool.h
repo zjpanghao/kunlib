@@ -192,8 +192,14 @@ namespace kunyan{
         reap_thd.detach();
       }
 
+      int size() const {
+        std::lock_guard<std::mutex> 
+          lock(lock_);
+        return context_pool_.size();
+      }
+
      private:
-      std::mutex  lock_;
+      mutable std::mutex  lock_;
       std::list<std::shared_ptr<RedisControl> > context_pool_;
       int normal_size_;
       int max_size_;
