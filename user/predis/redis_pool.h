@@ -232,6 +232,4 @@ class RedisControlGuard {
    RedisPool *redis_pool_;
 };
 
-void initRedisPool(const kunyan::Config &config); 
-RedisPool* getRedisPool();
 #endif
