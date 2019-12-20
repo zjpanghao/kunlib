@@ -55,7 +55,15 @@ namespace kunyan{
         return cmd_.SetValue(key, value);
       }
 
+      bool SetValue(const std::string &key,       int value) {
+        return cmd_.SetValue(key, value);
+      }
+
       bool SetExValue(const std::string &key, int seconds, const std::string &value) {
+        return cmd_.SetExValue(key, seconds, value);
+      }
+
+      bool SetExValue(const std::string &key, int seconds, int value) {
         return cmd_.SetExValue(key, seconds, value);
       }
 
@@ -75,6 +83,10 @@ namespace kunyan{
       }
 
       bool GetValue(const std::string key , std::string *value) {
+        return cmd_.GetValue(key, value);
+      }
+
+      bool GetValue(const std::string key , int *value) {
         return cmd_.GetValue(key, value);
       }
 

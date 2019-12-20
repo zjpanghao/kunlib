@@ -14,6 +14,8 @@ struct HttpControl {
   std::string url;
   int (*jsonCb)(const Json::Value &root,
      Json::Value &result); 
+  int (*bodyCb)(const Json::Value &root,
+     std::string &result); 
   void *arg;
 };
 

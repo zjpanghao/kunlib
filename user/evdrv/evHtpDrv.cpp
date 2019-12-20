@@ -2,10 +2,36 @@
 #include <signal.h>
 #include "json/json.h"
 #include "generalControl.h"
+#include "glog/logging.h"
 
 EvHtpDrv& EvHtpDrv::getDrv() {
   static EvHtpDrv drv;
   return drv;
+}
+
+int EvHtpDrv::evkvsCb(evhtp_kv_t * kv, void * arg) {
+  Json::Value *v = (Json::Value*)arg;
+  (*v)[kv->key] = kv->val;
+  return 0;
+}
+
+bool EvHtpDrv::getQueryJson(EvHttpRequest*req, Json::Value &root) {
+  switch (evReqMethod(req)) {
+    case htp_method_POST:
+      getBufferJson(
+          getInputBuffer(req),
+          root);
+      break;
+    case htp_method_GET:
+      evhtp_kvs_for_each(
+          req->htp->uri->query, 
+      EvHtpDrv::evkvsCb,
+      (void*)&root); 
+      break;
+    default:
+      break;
+  }
+  return 0;
 }
 
 int EvHtpDrv::evReqMethod(EvHttpRequest*req) {
@@ -27,6 +53,13 @@ void EvHtpDrv::sendResponse(EvHttpRequest *req,
   std::string s = value.toStyledString();
   evbuffer *response = req->htp->buffer_out;
   evbuffer_add_printf(response, "%s", s.c_str());
+  evhtp_send_reply(req->htp, 200);
+}
+
+void EvHtpDrv::sendResponseBody(EvHttpRequest *req,
+    const std::string &value) {
+  evbuffer *response = req->htp->buffer_out;
+  evbuffer_add_printf(response, "%s", value.c_str());
   evhtp_send_reply(req->htp, 200);
 }
 

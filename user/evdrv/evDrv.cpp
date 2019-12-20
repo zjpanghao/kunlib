@@ -49,11 +49,18 @@ void EvDrv::process(EvHttpRequest *req,
     Json::Value root;
     Json::Value result;
     LOG(INFO) << control->url << ",";
-    if (evReqMethod(req) == EVHTTP_REQ_POST) {
-      getBufferJson(getInputBuffer(req), root);
+    getQueryJson(req, root);
+    if (control->jsonCb) {
+      control->jsonCb(root, result);
+      sendResponse(req, result);
+      return;
     }
-    control->jsonCb(root, result);
-    sendResponse(req, result);
+    if (control->bodyCb) {
+      std::string resBody;
+      control->bodyCb(root, resBody);
+      sendResponseBody(req, resBody);
+      return;
+    }
     return;
 }
 

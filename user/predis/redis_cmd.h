@@ -73,6 +73,27 @@ class RedisCmd  {
       return rc;
     }
 
+    bool GetValue(const std::string key , int *value) {
+      redisReply* reply;
+      bool r = false;
+      if (!checkContext()) {
+        return r;
+      }
+      reply = (redisReply*)redisCommand(context_,"GET %s", key.c_str());
+      if (reply == NULL) {
+        setReplyFatalError();
+        return false;
+      }
+      if(reply->type == REDIS_REPLY_ERROR) {
+        freeReplyObject(reply);
+        return r;
+      }
+      r = true;
+      if (reply->type == REDIS_REPLY_INTEGER && reply->len)
+      *value = reply->integer;
+      freeReplyObject(reply);
+      return r;
+    }
 
     bool GetValue(const std::string key , std::string *value) {
       redisReply* reply;
@@ -119,6 +140,26 @@ class RedisCmd  {
       return r;
     }
 
+    bool SetExValue(const std::string &key, int seconds, int value) {
+      redisReply* reply;
+      bool r = false;
+      if (!checkContext()) {
+        return r;
+      }
+      reply = (redisReply*)redisCommand(context_,"SETEX %s %d %d", key.c_str(), seconds, value);
+
+      if (reply == NULL) {
+        setReplyFatalError();
+        return false;
+      }
+
+      if (reply->type == REDIS_REPLY_STATUS && reply->len && strncmp(reply->str, "OK", 2) == 0) {
+        r = true;
+      }
+      freeReplyObject(reply);
+      return r;
+    }
+
     bool SetExValue(const std::string &key, int seconds, const std::string &value) {
       redisReply* reply;
       bool r = false;
@@ -126,6 +167,26 @@ class RedisCmd  {
         return r;
       }
       reply = (redisReply*)redisCommand(context_,"SETEX %s %d %s", key.c_str(), seconds, value.c_str());
+
+      if (reply == NULL) {
+        setReplyFatalError();
+        return false;
+      }
+
+      if (reply->type == REDIS_REPLY_STATUS && reply->len && strncmp(reply->str, "OK", 2) == 0) {
+        r = true;
+      }
+      freeReplyObject(reply);
+      return r;
+    }
+
+    bool SetValue(const std::string &key, int value) {
+      redisReply* reply;
+      bool r = false;
+      if (!checkContext()) {
+        return r;
+      }
+      reply = (redisReply*)redisCommand(context_,"SET %s %d", key.c_str(), value);
 
       if (reply == NULL) {
         setReplyFatalError();

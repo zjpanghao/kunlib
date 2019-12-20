@@ -74,8 +74,24 @@ void EvHttpDrv::sendResponse(EvHttpRequest *req,
   evhttp_send_reply(req->http, 200, "OK", response);
 }
 
+void EvHttpDrv::sendResponseBody(EvHttpRequest *req,
+    const std::string &value) {
+  evbuffer *response = evbuffer_new();
+  evbuffer_add_printf(response, "%s", value.c_str());
+  evhttp_send_reply(req->http, 200, "OK", response);
+}
+
 int EvHttpDrv::evReqMethod(EvHttpRequest*req) {
   return evhttp_request_get_command(req->http);
+}
+
+bool EvHttpDrv::getQueryJson(EvHttpRequest*req, Json::Value &root) {
+  if (evReqMethod(req) == EVHTTP_REQ_POST) {
+    EvDrv::getBufferJson(
+        getInputBuffer(req), 
+        root);
+  }
+  return false;
 }
 
 EvHttpDrv &EvHttpDrv::getDrv() {
