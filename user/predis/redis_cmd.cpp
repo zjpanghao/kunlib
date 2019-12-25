@@ -247,7 +247,6 @@ bool RedisCmd::SetValue(const std::string &key, const std::string &value) {
     r = true;
   }
   freeReplyObject(reply);
-  LOG(INFO) << "thread :" << std::this_thread::get_id() << "setValueok:" <<(int*)context_ ;
   return r;
 }
 
