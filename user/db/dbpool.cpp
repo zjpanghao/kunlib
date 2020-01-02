@@ -11,8 +11,10 @@ Connection_T DBPool::GetConnection() {
 }
 
 int DBPool::PoolInit(MysqlDataSource *dataSource) {
-  return PoolInit(dataSource->ip().c_str(), dataSource->port(), dataSource->db().c_str(), 
-      dataSource->user().c_str(), dataSource->password().c_str(), 20, 1, 60);
+  return PoolInit(dataSource->ip().c_str(), dataSource->port(), dataSource->db().c_str(), dataSource->user().c_str(), dataSource->password().c_str(), 
+      dataSource->maxSize(), 
+      dataSource->initialSize(), 
+      dataSource->reapSec());
 }
 
 int DBPool::PoolInit(const char *ip, int port, const char *dbname, const char *user, const char *passwd, int poolsize, int initsize, int reapsec) {

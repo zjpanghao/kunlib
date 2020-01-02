@@ -105,26 +105,26 @@ class RedisControl;
         return cmd_.GetHashValue(hash, key, value);
       }
 
-      time_t last_access() {
-        return last_access_;
+      time_t lastAccess() {
+        return lastAccess_;
       }
       
-      void set_last_access(time_t now) {
-        last_access_ = now;
+      void setLastAccess(time_t now) {
+        lastAccess_ = now;
       }
 
       bool Timeout(time_t now) {
-        return now > last_access_ && now - last_access_ > 60;
+        return now > lastAccess_ && now - lastAccess_ > 60;
       }
+
      private:
-      // redisContext *context_;
       RedisCmd   cmd_;
       std::string ip_;
       int port_;
       std::string password_;
       std::string db_;
       bool idle_;
-      time_t last_access_;
+      time_t lastAccess_;
 };
 #endif
 
@@ -145,12 +145,14 @@ class RedisControl;
 
       int size() const ;
 
+      int activeSize() const;
+
      private:
       mutable std::mutex  lock_;
-      std::list<std::shared_ptr<RedisControl> > context_pool_;
-      int normal_size_;
-      int max_size_;
-      int active_num_;
+      std::list<std::shared_ptr<RedisControl> > contextPool_;
+      int initialSize_;
+      int maxSize_;
+      int activeSize_;
       std::string ip_;
       int port_;
       std::string db_;
@@ -167,7 +169,7 @@ class RedisControlGuard {
 
   private:
    std::shared_ptr<RedisControl> redisControl_;
-   RedisPool *redis_pool_;
+   RedisPool *redisPool_;
 };
 
 #endif

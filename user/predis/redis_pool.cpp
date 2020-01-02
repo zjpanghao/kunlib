@@ -5,16 +5,23 @@
 int RedisPool::size() const {
   std::lock_guard<std::mutex> 
     lock(lock_);
-  return context_pool_.size();
+  return contextPool_.size();
 }
+
+int RedisPool::activeSize() const {
+  std::lock_guard<std::mutex> 
+    lock(lock_);
+  return activeSize_;
+}
+
 void RedisPool::Init() {
-  for (int i = 0; i < normal_size_; i++) { 
+  for (int i = 0; i < initialSize_; i++) { 
     std::shared_ptr<RedisControl> control(new RedisControl(ip_, port_, db_, password_));
    if (!control->connect()) {
      return;
    }
    if (control->CheckValid()) {
-     context_pool_.push_back(control);
+     contextPool_.push_back(control);
    }
   }
   std::thread reap_thd(&RedisPool::ReepThd, this);
@@ -29,13 +36,13 @@ void RedisPool::ReepThd() {
 }
 void RedisPool::Reep() {
   std::lock_guard<std::mutex> lock(lock_);
-  int nums = context_pool_.size() - normal_size_;
-  auto it = context_pool_.begin(); 
+  int nums = contextPool_.size() - activeSize_ - initialSize_;
+  auto it = contextPool_.begin(); 
   time_t now = time(NULL);
-  while (nums > 0 && it != context_pool_.end()) {
+  while (nums > 0 && it != contextPool_.end()) {
     auto &control = *it;
     if (!control->CheckValid() || control->Timeout(now)) {
-      it = context_pool_.erase(it);
+      it = contextPool_.erase(it);
       nums--;
     } else {
       it++;
@@ -46,28 +53,28 @@ void RedisPool::Reep() {
 void RedisPool::ReturnControl(std::shared_ptr<RedisControl> control) {
   control->set_last_access(time(NULL));
   std::lock_guard<std::mutex> lock(lock_);
-  context_pool_.push_front(control);
-  active_num_--;
+  contextPool_.push_front(control);
+  activeSize_--;
 }
 
 std::shared_ptr<RedisControl> 
 RedisPool::GetControl() {
   std::lock_guard<std::mutex> lock(lock_);
-  while (!context_pool_.empty()) {
+  while (!contextPool_.empty()) {
     auto control = 
-      context_pool_.front();
-    context_pool_.pop_front();
+      contextPool_.front();
+    contextPool_.pop_front();
     if (control->CheckValid()) {
-      active_num_++;
+      activeSize_++;
       return control;
     }
   } 
 
-  if (active_num_ < max_size_) {
+  if (activeSize_ < maxSize_) {
     std::shared_ptr<RedisControl> control(new RedisControl(ip_, port_, db_, password_));
     if (control->connect() && 
         control->CheckValid()) {
-      active_num_++;
+      activeSize_++;
       return control;
     }
   }
@@ -75,9 +82,9 @@ RedisPool::GetControl() {
 }
 
 RedisPool::RedisPool(const RedisDataSource &dataSource) 
-  : normal_size_(dataSource.minSize()), 
-  max_size_(dataSource.maxSize()),
-  active_num_(0),
+  : initialSize_(dataSource.initialSize()), 
+  maxSize_(dataSource.maxSize()),
+  activeSize_(0),
   ip_(dataSource.ip()),
   port_(dataSource.port()),
   db_(dataSource.db()),
@@ -86,24 +93,24 @@ RedisPool::RedisPool(const RedisDataSource &dataSource)
 
 RedisControlGuard::RedisControlGuard(RedisPool *pool)
   :
-    redis_pool_(pool),
+    redisPool_(pool),
     redisControl_(NULL) {
 
 }
 
 std::shared_ptr<RedisControl> 
 RedisControlGuard::GetControl() {
-  if (redis_pool_ == NULL) {
+  if (redisPool_ == NULL) {
     return NULL;
   }
   redisControl_ = 
-    redis_pool_->GetControl();
+    redisPool_->GetControl();
   return redisControl_;
 }
 
 RedisControlGuard::~RedisControlGuard() {
-  if (redis_pool_ && redisControl_ != NULL) {
-    redis_pool_->ReturnControl(redisControl_);
+  if (redisPool_ && redisControl_ != NULL) {
+    redisPool_->ReturnControl(redisControl_);
   } 
 }
 

@@ -71,17 +71,17 @@ bool RedisControl::connect() {
   struct timeval ta = {2, 0};
   int rc = 0;
   if ((rc = cmd_.Connect(ip_.c_str(), port_, ta))!= 0) {
-    LOG(ERROR) << "redis connn error " << rc << " " << "ip:" << ip_ << "port:" <<  port_;
+    LOG(ERROR) << "redis connn error:" << rc << " ip:" << ip_ << "port:" <<  port_;
     return false;
   }
 
   if (password_ != "" && !Auth(password_)) {
-    LOG(ERROR) << "connect error passwd" << password_;
+    LOG(ERROR) << "connect error passwd:" << password_;
     return false;
   }
 
   if (!Select(db_)) {
-    LOG(ERROR) << "connect error select" << db_;
+    LOG(ERROR) << "connect error select:" << db_;
     return false;
   }
   struct timeval tv;
