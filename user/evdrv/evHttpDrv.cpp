@@ -29,7 +29,7 @@ void EvHttpDrv::start(
     const std::string &ip,
     int port, 
     int nThread, 
-    const std::vector<std::shared_ptr<GeneralControl>> &controls) {
+    const std::vector<GeneralControl*> &controls) {
   int fd = 0;
   if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
     return;

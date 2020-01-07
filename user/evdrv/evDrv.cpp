@@ -6,7 +6,7 @@
 #include "config/config.h"
 
 void EvDrv::startServer(const kunyan::Config &config,
-   const std::vector<std::shared_ptr<GeneralControl>> &controls) {
+   const std::vector<GeneralControl*> &controls) {
   std::string portConfig = config.get("server", "port");
   std::string threadConfig = config.get("server", "thread");
   std::stringstream ss;

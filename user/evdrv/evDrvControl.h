@@ -11,7 +11,7 @@ class EvDrvControl {
   public:
    static void startServer(
        const kunyan::Config &confg,
-       const std::vector<std::shared_ptr<GeneralControl>> &controls);
+       const std::vector<GeneralControl*> &controls);
 
 };
 #endif

@@ -27,7 +27,7 @@ class EvDrv {
  public:
    void startServer(
        const kunyan::Config &confg,
-       const std::vector<std::shared_ptr<GeneralControl>> &controls);
+       const std::vector<GeneralControl*> &controls);
    virtual ~EvDrv() = default;
   static std::string getBufferStr(struct evbuffer *buf);
   static bool getBufferJson(struct evbuffer *buf, Json::Value &root);
@@ -49,7 +49,7 @@ class EvDrv {
        const std::string &ip,
        int port, 
        int nThread, 
-       const std::vector<std::shared_ptr<GeneralControl>> &controls) = 0;
+       const std::vector<GeneralControl*> &controls) = 0;
 
 };
 

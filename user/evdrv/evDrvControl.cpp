@@ -5,7 +5,7 @@
 
 void EvDrvControl::startServer(
        const kunyan::Config &config,
-       const std::vector<std::shared_ptr<GeneralControl>> &controls) {
+       const std::vector<GeneralControl*> &controls) {
   EvDrv *drv = NULL;
   if (config.get("server", "htp") 
       != "") {
