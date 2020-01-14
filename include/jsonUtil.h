@@ -23,6 +23,16 @@ class JsonUtil {
       }
       t = value[key].asInt();
     }
+    
+    static void getJsonDouble(const Json::Value
+        &value, const std::string &key, double &t) {
+      if (value.isNull() 
+        || !value.isMember(key) 
+        || !value[key].isDouble()) {
+        return;
+      }
+      t = value[key].asDouble();
+    }
 };
 
 #endif

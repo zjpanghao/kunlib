@@ -1,6 +1,7 @@
 #ifndef INCLUDE_ROW_MAPPER_H
 #define INCLUDE_ROW_MAPPER_H
 #include "zdb/zdb.h"
+#include "glog/logging.h"
 template<class T>
 class RowMapper {
  public:

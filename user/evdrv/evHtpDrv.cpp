@@ -11,6 +11,15 @@ EvHtpDrv& EvHtpDrv::getDrv() {
 
 int EvHtpDrv::evkvsCb(evhtp_kv_t * kv, void * arg) {
   Json::Value *v = (Json::Value*)arg;
+  if (kv == NULL) {
+    LOG(ERROR) << "error kv";
+    return 0;
+  }
+
+  if (kv->klen == 0 || kv->vlen == 0) {
+    return 0;
+  }
+
   (*v)[kv->key] = kv->val;
   return 0;
 }

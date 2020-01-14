@@ -31,6 +31,9 @@ class SqlTemplate {
           case PreparedStmt::ElemType::INT:
             PreparedStatement_setInt(p,                     inx,ps.getInt(inx));
             break;
+          case PreparedStmt::ElemType::DOUBLE:
+            PreparedStatement_setDouble(p,                     inx,ps.getDouble(inx));
+            break;
         }
       }
     }
