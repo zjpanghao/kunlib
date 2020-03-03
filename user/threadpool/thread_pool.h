@@ -12,7 +12,7 @@ class Runnable {
  public:
   virtual ~Runnable() {
   }
-  virtual void Run() {
+  virtual void run() {
   }
   virtual void ErrorMsg(int code, const std::string &message) {
 
@@ -27,24 +27,24 @@ class ExecutorService {
   ExecutorService(int normal, int queueSize) 
     : queueSize_(queueSize) {
       for (int i = 0; i < normal; i++) {
-        std::thread t(&ExecutorService::Run, this);
+        std::thread t(&ExecutorService::run, this);
         t.detach();
       }
   }
 
-  void Run() {
+  void run() {
     while (true) {
       std::unique_lock<std::mutex>  ulock(lock_);
       cond_.wait(ulock, [this] { return !queue_.empty();});
       std::unique_ptr<Runnable> able = std::move(queue_.front());
       queue_.pop();
       ulock.unlock();
-      able->Run();
+      able->run();
     }
 
   }
 
-  bool Execute(std::unique_ptr<Runnable> able) {
+  bool execute(std::unique_ptr<Runnable> able) {
     std::lock_guard<std::mutex> guard(lock_);
     if (queue_.size() > queueSize_) {
       int half = queueSize_ / 2;
@@ -69,7 +69,7 @@ class ExecutorService {
 
 class Executors {
  public:
-  static ExecutorService *NewFixPool(int num) {
+  static ExecutorService *newFixPool(int num) {
     return new ExecutorService(num);
   }
   static ExecutorService *NewFixPool(int num, int queueSize) {
