@@ -64,6 +64,50 @@ class SqlTemplate {
       int query(
           const PreparedStmt &ps,
           RowMapper<T>   &mapper,
+          std::vector<T> &l) {
+        int rc = 0;
+        Connection_T conn; 
+        DBPoolGuard guard(pool_, &conn);
+        if (conn == NULL) {
+          return -1;
+        }
+        ResultSet_T r;
+        TRY {
+          PreparedStatement_T p
+            = Connection_prepareStatement(conn, ps.sql().c_str());
+          setPreparedStmt(ps, p);
+          r = PreparedStatement_executeQuery(p);
+        } CATCH(SQLException) {
+          LOG(ERROR) << "load person faces error" << Exception_frame.message;
+          rc = -1;
+          l.clear();
+        }
+        END_TRY;
+        if (rc != 0) {
+          return rc;
+        }
+        TRY {
+          while (ResultSet_next(r)) {
+            T t;
+            int count = ResultSet_getColumnCount(r);
+            int rt = 0;
+            rt = mapper.mapRow(r, 0, t);
+            if(rt == 0) {
+              l.push_back(std::move(t));
+            }
+          }
+        } CATCH(SQLException) {
+          LOG(ERROR) << "query error:" << Exception_frame.message;
+          l.clear();
+          rc = -1;
+        }
+        END_TRY;
+      }
+
+    template <class T>
+      int query(
+          const PreparedStmt &ps,
+          RowMapper<T>   &mapper,
           std::list<T> &l) {
         int rc = 0;
         Connection_T conn; 
@@ -93,7 +137,7 @@ class SqlTemplate {
             int rt = 0;
             rt = mapper.mapRow(r, 0, t);
             if(rt == 0) {
-              l.push_back(t);
+              l.push_back(std::move(t));
             }
           }
         } CATCH(SQLException) {
@@ -102,6 +146,14 @@ class SqlTemplate {
           rc = -1;
         }
         END_TRY;
+      }
+
+    template <class T>
+      int query(const std::string sql,
+          RowMapper<T>   &mapper,
+          std::vector<T> &l) {
+        PreparedStmt ps(sql);
+        return query<T>(ps, mapper, l);
       }
 
     template <class T>
