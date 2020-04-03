@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 2.8)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${KUN}/libs)
+include_directories(/usr/local/include)
+include_directories(${KUN}/user)
+include_directories(${KUN}/include)
+link_directories(${KUN}/libs)
+add_library(hpv_core  SHARED  hpvCore.cpp  parser.cpp hpvPool.cpp evHpv.cpp)
+target_link_libraries(hpv_core glog event pthread)
