@@ -25,51 +25,53 @@
 
 static void signal_cb(evutil_socket_t, short, void *);
 
-int HpvCore::coreLoop(
+HpvCore::HpvCore(
    std::vector<HpvApp*> apps, int port) {
   for (auto app : apps) {
     app->init();
   }
-  Hpv hpv;
-  hpv.pool = new HpvPool(5);
-  struct event *signal_event;
+  hpv_ = new Hpv();
+  hpv_->apps = apps;
+  
+  hpv_->pool = new HpvPool(5);
 
   struct sockaddr_in sin;
-  hpv.base = event_base_new();
-  if (!hpv.base) {
+  hpv_->base = event_base_new();
+  if (!hpv_->base) {
     LOG(ERROR) << "Could not initialize libevent!";
-    return 1;
+    return;
   }
 
   memset(&sin, 0, sizeof(sin));
   sin.sin_family = AF_INET;
   sin.sin_port = htons(port);
-
-  hpv.server = 
-    evconnlistener_new_bind(hpv.base, 
-        hpv_accept_cb, (void *)&hpv,
-      LEV_OPT_REUSEABLE|LEV_OPT_CLOSE_ON_FREE, -1,
-      (struct sockaddr*)&sin,
-      sizeof(sin));
-
-  if (!hpv.server) {
-    LOG(INFO) << "Could not create a listener!";
-    return 1;
+  if (port > 0) {
+    hpv_->server = 
+      evconnlistener_new_bind(hpv_->base, 
+          hpv_accept_cb, (void *)hpv_,
+          LEV_OPT_REUSEABLE|LEV_OPT_CLOSE_ON_FREE, -1,
+          (struct sockaddr*)&sin,
+          sizeof(sin));
   }
 
-  signal_event = evsignal_new(hpv.base, SIGINT, signal_cb, (void *)hpv.base);
 
-  if (!signal_event || event_add(signal_event, NULL)<0) {
+  hpv_->signal_event = evsignal_new(hpv_->base, SIGINT, signal_cb, (void *)hpv_->base);
+
+  if (!hpv_->signal_event 
+      || event_add(hpv_->signal_event, NULL)<0) {
     fprintf(stderr, "Could not create/add a signal event!\n");
-    return 1;
+    return;
   }
 
-  event_base_dispatch(hpv.base);
+}
 
-  evconnlistener_free(hpv.server);
-  event_free(signal_event);
-  event_base_free(hpv.base);
-  return 0;
+void HpvCore::loop() {
+  event_base_dispatch(hpv_->base);
+  if (hpv_->server) {
+    evconnlistener_free(hpv_->server);
+  }
+  event_free(hpv_->signal_event);
+  event_base_free(hpv_->base);
 }
 
   static void

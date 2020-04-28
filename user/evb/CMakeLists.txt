@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
+  add_definitions(-g)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${KUN}/libs)
 include_directories(/usr/local/include)
 include_directories(${KUN}/user)

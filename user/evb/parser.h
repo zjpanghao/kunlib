@@ -1,8 +1,15 @@
 #ifndef INCLUDE_PARSER_H
 #define INCLUDE_PARSER_H
 struct HpvConn;
-class ServerProtocal {
+class ServerProtocol {
   public:
+   int  pack(
+       HpvConn* conn,
+       short mode,
+       int erroCode,
+                 const char *errorMsg,
+                 const char *msg);
+                 
    void serv(HpvConn*conn, 
        const char *data, int len);
    virtual void run(HpvConn*conn,const char *data, int len) = 0; 
@@ -12,9 +19,9 @@ class HpvParser {
    HpvParser(HpvConn *conn);
    void run(const char *data, int len);
 
-   static void reg(int, ServerProtocal*server);
+   static void reg(int, ServerProtocol*server);
 
-   static ServerProtocal* userProtocal_[1024];
+   static ServerProtocol* userProtocol_[1024];
    HpvConn *conn();
   private:
    HpvConn *conn_;

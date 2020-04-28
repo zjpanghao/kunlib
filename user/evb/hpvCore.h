@@ -2,14 +2,18 @@
 #define INCLUDE_HPVCORE_H
 #include <vector>
 
-class HpvApp {
- public:
-   virtual bool init() = 0;
-};
-
+struct HpvConn;
+class Hpv;
+class HpvApp;
 class HpvCore {
   public:
-   static int coreLoop(
-      std::vector<HpvApp*> apps, int port);
+   HpvCore(std::vector<HpvApp*> app, int port);
+   void loop();
+   Hpv *hpv() {
+     return hpv_;
+   }
+
+  private:
+   Hpv *hpv_;
 };
 #endif
