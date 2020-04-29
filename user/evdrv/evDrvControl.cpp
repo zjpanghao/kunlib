@@ -9,6 +9,7 @@ void EvDrvControl::startServer(
   EvDrv *drv = NULL;
   if (config.get("server", "htp") 
       != "") {
+    LOG(INFO) << "evhtp";
     drv = &EvHtpDrv::getDrv();
   } else {
     drv = &EvHttpDrv::getDrv();

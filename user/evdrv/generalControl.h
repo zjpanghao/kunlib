@@ -5,6 +5,7 @@
 #include <string>
 #include <memory>
 #include "json/json.h"
+#include <functional>
 
 namespace kunyan {
   class Config;
@@ -12,8 +13,10 @@ namespace kunyan {
 
 struct HttpControl {
   std::string url;
-  int (*jsonCb)(const Json::Value &root,
-     Json::Value &result); 
+  std::function<int(const Json::Value &root,
+      Json::Value &result)> jsonCb;
+  //int (*jsonCb)(const Json::Value &root,
+   //  Json::Value &result); 
   int (*bodyCb)(const Json::Value &root,
      std::string &result); 
   void *arg;

@@ -48,7 +48,7 @@ void EvDrv::process(EvHttpRequest *req,
     int rc = 0;
     Json::Value root;
     Json::Value result;
-    LOG(INFO) << control->url << ",";
+    LOG(INFO) << control->url;
     getQueryJson(req, root);
     if (control->jsonCb) {
       control->jsonCb(root, result);

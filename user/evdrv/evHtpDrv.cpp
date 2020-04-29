@@ -97,7 +97,9 @@ void EvHtpDrv::start(
           ,generalCb, (void*)httpControl);
       }
   }
+  LOG(INFO) << "evhtp start threads:" << nThread;
   evhtp_use_threads_wexit(htp, NULL, NULL, nThread, NULL);
   evhtp_bind_socket(htp, ip.c_str(), port, 128);
+  LOG(INFO) << "stazt evhtp server:";
   event_base_dispatch(evbase);
 }

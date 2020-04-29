@@ -39,22 +39,21 @@ void EvHttpDrv::start(
   struct event_base *evbase = event_base_new();
   struct evhttp *http    = evhttp_new(evbase);
   for (auto &generalControl : controls) {
-    for (auto &control : generalControl->getMapping()) {
-      HttpControl *httpControl = NULL;
-      if (cmap.count(control.url) == 0) {
-        HttpControl *httpControl = new HttpControl(control);
-        cmap[control.url] = httpControl;
-      }
-      httpControl = cmap[control.url];
-      evhttp_set_cb(http, control.url.c_str(), generalCb, (void*)httpControl);
+    for (auto &control : 
+        generalControl->getMapping()) {
+      evhttp_set_cb(http, 
+          control.url.c_str(), 
+          generalCb, 
+          &control);
     }
   }
   if (i == 0) {
     struct evhttp_bound_socket *bound;
-    bound = evhttp_bind_socket_with_handle(http, ip.c_str(), port);
+    bound = evhttp_bind_socket_with_handle(http,
+        ip.c_str(), port);
     if (!bound) {
         return;
-      }
+    }
       fd = evhttp_bound_socket_get_fd(bound);
     } else {
       evhttp_accept_socket(http, fd);
