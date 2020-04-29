@@ -61,9 +61,13 @@ RedisControl::RedisControl(
     const std::string &ip, 
     int port, 
     const std::string &db, 
-    const std::string &password) 
-  : ip_(ip), port_(port), db_(db), 
+    const std::string &password,
+    int timeout) 
+  : ip_(ip), 
+  port_(port), 
+  db_(db), 
   password_(password),
+  timeout_(timeout),
   idle_(true) {
   }
 
@@ -86,7 +90,7 @@ bool RedisControl::connect() {
   }
   struct timeval tv;
   tv.tv_sec = 0;
-  tv.tv_usec = 100000;
+  tv.tv_usec = timeout_;
   cmd_.setTimeout(tv);
   cmd_.keepAlive();
   LOG(INFO) << "connect ok:";

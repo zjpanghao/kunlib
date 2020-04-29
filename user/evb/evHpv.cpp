@@ -17,6 +17,7 @@ static void
 hpv_conn_readcb(
     struct bufferevent *bev, 
     void * arg){
+  std::cout << "read back" << std::endl;
   HpvConn *conn = (HpvConn*)arg;
   struct evbuffer *buffer = bufferevent_get_input(bev);
   int len = evbuffer_get_length(buffer);
@@ -40,6 +41,7 @@ hpv_conn_readcb(
   conn->status = HpvConn::Status::RECV_HEAD;
   LOG(INFO) << "parse body:" << conn->bodySize;
   (conn->parser)->run(conn->buf, conn->bodySize);
+  bufferevent_enable(bev, EV_WRITE);
 
 }
 
@@ -170,7 +172,6 @@ void hpv_conn_cb(
   bufferevent_disable(bev, EV_WRITE);
    if (conn->server) {
      for (auto &app : conn->hpv->apps) {
-       LOG(INFO) << "app:" << &app;
        app->conn(conn);
        int code;
        ServerProtocol *prot;
@@ -179,7 +180,6 @@ void hpv_conn_cb(
      }
      bufferevent_disable(bev, EV_WRITE);
    }
-   bufferevent_enable(bev, EV_READ);
    if (!conn->server) {
      struct sockaddr_in serv_addr;
      bzero((char *) &serv_addr, sizeof(serv_addr));
@@ -191,6 +191,7 @@ void hpv_conn_cb(
          sizeof(sockaddr));
     bufferevent_enable(bev, EV_WRITE);
    }
+   bufferevent_enable(bev, EV_READ);
 
 }
 

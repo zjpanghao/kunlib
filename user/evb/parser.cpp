@@ -11,25 +11,32 @@ int ServerProtocol::pack(
     int errorCode,
     const char *errorMsg,
     const char *msg) {
-  if (msg == NULL || errorMsg == NULL) {
-    return -1;
-  }
   char *buf = conn->sendBuf;
-  int len = sizeof(int) +sizeof(short)+ strlen(msg) + strlen(errorMsg) + 3*sizeof(short);
-  *(int*)buf = len;
   buf += sizeof(int);
   *(short*)buf = mode;
   buf += sizeof(short);
   *(short*)(buf) = errorCode;
   buf += sizeof(short);
-  *(short*)(buf) = strlen(errorMsg);
-  buf += sizeof(short);
-  strncpy(buf, errorMsg, strlen(errorMsg));
-  buf += strlen(errorMsg);
-  *(short*)(buf) = strlen(msg);
-  buf += sizeof(short);
-  strncpy(buf, msg, strlen(msg));
-  hpv_send(conn, conn->sendBuf, len);
+  if (errorMsg != NULL) {
+    *(short*)(buf) = strlen(errorMsg);
+    buf += sizeof(short);
+    strncpy(buf, errorMsg, strlen(errorMsg));
+    buf += strlen(errorMsg);
+   } else {
+      *(short*)(buf) = 0;
+      buf += sizeof(short);
+   }
+  if (msg != NULL) {
+    *(short*)(buf) = strlen(msg);
+    buf += sizeof(short);
+    strncpy(buf, msg, strlen(msg));
+    buf += strlen(msg);
+  } else {
+    *(short*)(buf) = 0;
+    buf += sizeof(short);
+  }
+  *(int*)conn->sendBuf = buf - conn->sendBuf;
+  conn->sendLen = buf - conn->sendBuf;
   return 0;
 }
 HpvConn* HpvParser::conn() {

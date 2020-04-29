@@ -12,6 +12,7 @@
 #include "redis_cmd.h"
 #include "redis_pool.h"
 #include "datasource/redisDataSource.h"
+#include <condition_variable>
 namespace kunyan{
   class Config;
   class RedisDataSource;
@@ -134,6 +135,8 @@ class RedisControl;
 
       std::shared_ptr<RedisControl> 
         GetControl();
+      std::shared_ptr<RedisControl> 
+        GetControlInner();
 
       void ReturnControl(std::shared_ptr<RedisControl> control);
       
@@ -157,6 +160,8 @@ class RedisControl;
       int port_;
       std::string db_;
       std::string password_;
+      int timeout_{100000};
+      //std::condition_variable notEmpty_;
     };
 
 class RedisControlGuard {

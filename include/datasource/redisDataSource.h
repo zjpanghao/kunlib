@@ -6,7 +6,22 @@
 class RedisDataSource : public DataSource{
  public:
   RedisDataSource(const kunyan::Config &config) : DataSource("redis", config) {
+    std::string timeout = 
+      config.get("redis", "timeout");
+    if (!timeout.empty()) {
+      std::stringstream ss;
+      ss << timeout;
+      ss >> timeout_;
+    }
   }
+
+  int timeout() const {
+    return timeout_;
+  }
+
+ private:
+  int timeout_{100000};
+
 
 };
 #endif

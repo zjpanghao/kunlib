@@ -17,7 +17,8 @@ class RedisControl {
     RedisControl(const std::string &ip, 
         int port, 
         const std::string &db, 
-        const std::string &password);
+        const std::string &password,
+        int timeout);
 
     ~RedisControl();
 
@@ -58,6 +59,7 @@ class RedisControl {
     int port_;
     std::string password_;
     std::string db_;
+    int timeout_;
     bool idle_;
     time_t last_access_;
 };

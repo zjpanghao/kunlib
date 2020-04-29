@@ -16,7 +16,8 @@ int RedisPool::activeSize() const {
 
 void RedisPool::Init() {
   for (int i = 0; i < initialSize_; i++) { 
-    std::shared_ptr<RedisControl> control(new RedisControl(ip_, port_, db_, password_));
+    std::shared_ptr<RedisControl> control(new RedisControl(ip_, port_, 
+          db_, password_, timeout_));
    if (!control->connect()) {
      return;
    }
@@ -31,7 +32,7 @@ void RedisPool::Init() {
 void RedisPool::ReepThd() {
   while (1) {
     Reep();
-    ::sleep(30);
+    ::sleep(60);
   }
 }
 void RedisPool::Reep() {
@@ -55,11 +56,11 @@ void RedisPool::ReturnControl(std::shared_ptr<RedisControl> control) {
   std::lock_guard<std::mutex> lock(lock_);
   contextPool_.push_front(control);
   activeSize_--;
+  //notEmpty_.notify_one();
 }
 
 std::shared_ptr<RedisControl> 
-RedisPool::GetControl() {
-  std::lock_guard<std::mutex> lock(lock_);
+RedisPool::GetControlInner() {
   while (!contextPool_.empty()) {
     auto control = 
       contextPool_.front();
@@ -71,14 +72,24 @@ RedisPool::GetControl() {
   } 
 
   if (activeSize_ < maxSize_) {
-    std::shared_ptr<RedisControl> control(new RedisControl(ip_, port_, db_, password_));
+    std::shared_ptr<RedisControl> control(new RedisControl(ip_, port_, db_, password_,
+          timeout_));
     if (control->connect() && 
         control->CheckValid()) {
       activeSize_++;
       return control;
     }
   }
-  return NULL;
+  return nullptr;
+}
+
+  std::shared_ptr<RedisControl>  
+RedisPool::GetControl() {
+  std::shared_ptr<RedisControl> control(nullptr);
+  std::unique_lock<std::mutex> 
+    lock(lock_);
+  control= GetControlInner();
+  return control;
 }
 
 RedisPool::RedisPool(const RedisDataSource &dataSource) 
@@ -88,7 +99,8 @@ RedisPool::RedisPool(const RedisDataSource &dataSource)
   ip_(dataSource.ip()),
   port_(dataSource.port()),
   db_(dataSource.db()),
-  password_(dataSource.password()) {
+  password_(dataSource.password()),
+  timeout_(dataSource.timeout()){
   }
 
 RedisControlGuard::RedisControlGuard(RedisPool *pool)
