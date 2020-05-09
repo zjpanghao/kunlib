@@ -21,6 +21,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include "timer/timer.h"
 
 
 static void signal_cb(evutil_socket_t, short, void *);

@@ -12,12 +12,12 @@
 #include "hpvPool.h"
 #include "parser.h"
 #include "glog/logging.h"
+#include "timer/timer.h"
 
 static void
 hpv_conn_readcb(
     struct bufferevent *bev, 
     void * arg){
-  std::cout << "read back" << std::endl;
   HpvConn *conn = (HpvConn*)arg;
   struct evbuffer *buffer = bufferevent_get_input(bev);
   int len = evbuffer_get_length(buffer);
@@ -28,7 +28,6 @@ hpv_conn_readcb(
     char tmp[9] = {0};
     bufferevent_read(bev, tmp, 4);
     int size = *(int*)tmp;
-    LOG(INFO) << "The head:" << size;
     conn->status = HpvConn::Status::RECV_BODY;
     conn->bodySize=size-4;
     len -=4;
@@ -39,8 +38,7 @@ hpv_conn_readcb(
   }
   bufferevent_read(bev, conn->buf, conn->bodySize);
   conn->status = HpvConn::Status::RECV_HEAD;
-  LOG(INFO) << "parse body:" << conn->bodySize;
-  (conn->parser)->run(conn->buf, conn->bodySize);
+  (conn->parser)->run(conn, conn->buf, conn->bodySize);
   bufferevent_enable(bev, EV_WRITE);
 
 }
@@ -52,10 +50,6 @@ static void
    HpvConn*conn = (HpvConn*)arg;
    struct evbuffer *output = bufferevent_get_output(conn->bev);
   int len;
-	if ((len=evbuffer_get_length(output)) == 0) {
-	//	bufferevent_free(conn->bev);
-	}
-  LOG(INFO) << "outbuf len:" << len;
   if (conn->needClose) {
 	  hpv_conn_close(conn);
   }
@@ -65,23 +59,21 @@ static void
 void hpv_conn_close(HpvConn* conn) {
    conn->thr->setTaskCount(
        conn->thr->taskCount() - 1);
-   delete conn->parser;
-#if 0
-   while (true) {
-    struct evbuffer *output = bufferevent_get_output(conn->bev);
-	  if (evbuffer_get_length(output) == 0) {
-      break;
-    }
-     LOG(INFO) << "wait close";
-    char c;
-     bufferevent_read(conn->bev, &c, 1);
-   }
-#endif
-   //bufferevent_shutdown(conn->bev,NULL);
 	 bufferevent_free(conn->bev);
-//   evutil_closesocket(conn->fd);
    delete conn;
    LOG(INFO) << "delete :" << conn;
+}
+
+static void doConnectWork(HpvConn *conn) {
+  conn->timer.reset(new kun::Timer());
+  for (auto &app : conn->hpv->apps) {
+    int code;
+    ServerProtocol *prot;
+    app->reg(&code, &prot);
+    conn->parser->reg(code, prot);
+    app->conn(conn);
+  }
+
 }
 
 static void
@@ -89,30 +81,31 @@ static void
     struct bufferevent *bev, 
     short events,
     void * arg){
-   LOG(INFO) << "conn event:" << events;
+   //LOG(INFO) << "conn event:" << events;
    HpvConn *conn = (HpvConn*)arg;
-   if (conn->server) {
-     if (events & BEV_EVENT_EOF) {
-       LOG(INFO) << "onclose" << conn->hpv->apps.size();
-       for (auto &app : conn->hpv->apps) {
-         app->onClose(conn);
-       }
+   if (events & BEV_EVENT_EOF) {
+     LOG(INFO) << "onclose" << conn->hpv->apps.size();
+     for (auto &app : conn->hpv->apps) {
+       app->onClose(conn);
      }
      hpv_conn_close(conn);
-   } else {
-     for (auto &app : conn->hpv->apps) {
-       app->conn(conn);
-       int code;
-       ServerProtocol *prot;
-       app->reg(&code, &prot);
-         conn->parser->reg(code, prot);
-     }
    }
+   if (events & BEV_EVENT_CONNECTED) {
+     doConnectWork(conn);
+   }
+   //}
+if (events &BEV_EVENT_TIMEOUT) {
+  if (conn->timer != nullptr) {
+    conn->timer->run();
+  }
+  bufferevent_enable(conn->bev, EV_READ);
+  //   bufferevent_enable(conn->bev, EV_WRITE);
+}
 }
 
 std::shared_ptr<HpvConn>
-  addServer(Hpv *hpv,
-  HpvServer &server) {
+addServer(Hpv *hpv,
+    HpvServer &server) {
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
   int flag = fcntl(sockfd,F_GETFL,0);
   fcntl(sockfd,F_SETFL,flag|O_NONBLOCK);
@@ -153,7 +146,7 @@ void hpv_conn_cb(
    HpvConn *conn = (HpvConn*) arg;
    conn->thr = thd;
    conn->base = base;
-   conn->parser = new HpvParser(conn);
+   conn->parser = HpvParser::instance();
    struct bufferevent *bev;
    bev = bufferevent_socket_new(
        conn->base, 
@@ -169,16 +162,10 @@ void hpv_conn_cb(
        hpv_conn_writecb, 
        hpv_conn_eventcb, 
        conn);
-  bufferevent_disable(bev, EV_WRITE);
+  struct timeval tv{1,0};
+  bufferevent_set_timeouts(bev, &tv, NULL);
    if (conn->server) {
-     for (auto &app : conn->hpv->apps) {
-       app->conn(conn);
-       int code;
-       ServerProtocol *prot;
-       app->reg(&code, &prot);
-       conn->parser->reg(code, prot);
-     }
-     bufferevent_disable(bev, EV_WRITE);
+     doConnectWork(conn);
    }
    if (!conn->server) {
      struct sockaddr_in serv_addr;
@@ -189,10 +176,10 @@ void hpv_conn_cb(
      bufferevent_socket_connect(bev,
          (struct sockaddr*)&serv_addr,
          sizeof(sockaddr));
-    bufferevent_enable(bev, EV_WRITE);
    }
+   
    bufferevent_enable(bev, EV_READ);
-
+   bufferevent_enable(bev, EV_WRITE);
 }
 
 void HpvApp::appSend(HpvConn* conn,

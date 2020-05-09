@@ -22,14 +22,21 @@ class Timer {
 
       long stamp;
       int seconds;
+      bool everest{true};
+      int callCnt{0};
       TimerFunc func;
    };
 
-   Timer() {
-      start();
-   }
+   Timer();
+   ~Timer();
+#if 0
+   Timer(const Timer &timer);
+   Timer& operator=(Timer &timer);
+   Timer(Timer &&timer);
+   Timer& operator=(Timer &&timer);
+#endif
 
-   int addFunc(int sec, TimerFunc func);
+   int addFunc(int sec, int count, TimerFunc func);
 
    void getTimeoutTasks(
        std::vector<TimerTask> &tasks) ;
@@ -49,7 +56,7 @@ class Timer {
    }
    std::vector<TimerTask> tasks_;
    std::thread *t_;
-   std::mutex lock_;
+   mutable std::mutex lock_;
 };
 
 }

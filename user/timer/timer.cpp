@@ -1,24 +1,27 @@
 #include "timer.h"
 #include <algorithm>
 #include <glog/logging.h>
+#include <iostream>
 namespace kun {
+  Timer::Timer() = default;
+  Timer::~Timer() = default;
   void Timer::run() {
-    while (true) {
-      sleep(1);
-      std::vector<TimerTask> tasks;
-      getTimeoutTasks(tasks);
-      for (auto &task : tasks) {
-        task.run();
+    std::vector<TimerTask> tasks;
+    getTimeoutTasks(tasks);
+    for (auto &task : tasks) {
+      task.run();
+    }
+    for (auto &task :tasks) {
+      if (!task.everest && --task.callCnt <= 0) {
+        continue;
       }
-      for (auto &task :tasks) {
-        addFunc(task.seconds, task.func);
-      }
+      addFunc(task.seconds, task.callCnt, task.func);
     }
   }
 
-    void Timer::getTimeoutTasks(std::vector<TimerTask> &tasks) {
-      long current = time(NULL);
-      std::lock_guard<std::mutex> guard(lock_);
+  void Timer::getTimeoutTasks(std::vector<TimerTask> &tasks) {
+    long current = time(NULL);
+    std::lock_guard<std::mutex> guard(lock_);
     while (!tasks_.empty()) {
       auto &checkTask = tasks_.front();
       if (checkTask.stamp > current) {
@@ -32,11 +35,15 @@ namespace kun {
 
   }
 
-int Timer::addFunc(int sec, TimerFunc func) {
+int Timer::addFunc(int sec,
+    int count, 
+    TimerFunc func) {
   TimerTask tb;
   tb.seconds = sec;
   tb.stamp = sec + time(NULL);
   tb.func = func;
+  tb.everest = count <= 0;
+  tb.callCnt = count;
   std::lock_guard<std::mutex> guard(lock_);
   tasks_.push_back(tb);
   std::push_heap(tasks_.begin(), 
@@ -48,7 +55,7 @@ int Timer::addFunc(int sec, TimerFunc func) {
 }
 
 void testFunc(void *a) {
-  LOG(INFO) << time(NULL) << "test" << *(int*)a << std::endl;
+  std::cout << time(NULL) << "test" << *(int*)a << std::endl;
 }
 
 int main() {
@@ -56,16 +63,11 @@ int main() {
   
   int b = 3;
   int a = 2;;
-//  tm->addFunc(10, &a, testFunc);
   std::function<void()> func = std::bind(testFunc, &a);
-  tm.addFunc(90,  func);
+  tm.addFunc(10, 10, func);
   int cnt = 100;
   while (true) {
-    sleep(cnt);
-    int *d = new int;
-    *d = cnt;
-//    tm->addFunc(cnt, d, testFunc);
-    cnt *= 2;
+    sleep(1);
   }
   return 0;
 }

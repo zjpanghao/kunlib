@@ -13,6 +13,9 @@ struct HpvPool;
 struct HpvThread;
 class HpvApp;
 class ServerProtocol;
+namespace kun {
+ class Timer;
+};
 struct Hpv {
   struct evconnlistener *server{NULL};
   struct event_base *base;
@@ -46,28 +49,9 @@ struct HpvConn {
   char ip[20];
   int port;
   bool server{true};
+  std::shared_ptr<kun::Timer> timer{nullptr};
 };
 
-class HpvSSO {
- public:
-  int makeLogin(char *buffer, int uid) {
-    const char *start = buffer;
-    bzero(buffer,256);
-    buffer += 4;
-    *(short*)buffer = 10;
-    buffer += 2;
-    *(short*)buffer = 1;
-    buffer += 2;
-    *(int*)buffer= uid;
-    buffer += 4;
-    *(int*)buffer = 10;
-    strcpy(buffer, "1234567890");
-    buffer += 10;
-    *(int*)start = buffer - start;
-    return buffer - start;
-  }
-
-};
 void hpv_send(HpvConn* conn, 
     const char *buf,
     int len);

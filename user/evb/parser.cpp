@@ -4,51 +4,103 @@
 #include <iostream>
 #include "evHpv.h"
 #include "glog/logging.h"
-ServerProtocol* HpvParser::userProtocol_[]{nullptr};
-int ServerProtocol::pack(
+#include "event2/bufferevent.h"
+int ServerProtocol::readString(const char*buf,
+    int &len,
+    std::string &value) {
+  short slen = 0;
+  if (len < 2) {
+    return 0;
+  }
+  int rlen = read16(buf, len, slen);
+  if (rlen != sizeof(short)) {
+    return 0;
+  }
+  if (slen > len) {
+    return 0;
+  }
+
+  if (slen > 0) {
+    value.assign(buf + sizeof(short), slen);
+    len -= slen;
+  }
+  return sizeof(short) + slen;
+}
+
+int ServerProtocol::write16(char* data,
+    int &len,
+    short value) {
+  if (len < 2) {
+    return 0;
+  }
+  *(short*)data = value;
+  len -= 2;
+  return 2;
+}
+
+int ServerProtocol::writeString(char *data,
+  const std::string &s) {
+  if (s.length() > MAX_SEND_LEN) {
+    return 0;
+  }
+  *(short*)data = s.length();
+  strncpy(data + sizeof(short), s.c_str(), (int)s.length());
+  return s.length()+ sizeof(short);
+}
+
+int ServerProtocol::read16(const char *data,
+    int &len, short &value) {
+  if (len < 2) {
+    return 0;
+  }
+  value = *(short*)data;
+  len -= 2;
+  return 2;
+}
+
+const char * 
+  ServerProtocol::read32(const char *data,
+    int &len, int &value) {
+  if (len < 4) {
+    return NULL;
+  }
+  value = *(int*)data;
+  len -= 4;
+  return data + 4;
+}
+
+int ServerProtocol::sendPack(
     HpvConn* conn,
     short mode,
-    int errorCode,
-    const char *errorMsg,
-    const char *msg) {
-  char *buf = conn->sendBuf;
-  buf += sizeof(int);
-  *(short*)buf = mode;
-  buf += sizeof(short);
-  *(short*)(buf) = errorCode;
-  buf += sizeof(short);
-  if (errorMsg != NULL) {
-    *(short*)(buf) = strlen(errorMsg);
-    buf += sizeof(short);
-    strncpy(buf, errorMsg, strlen(errorMsg));
-    buf += strlen(errorMsg);
-   } else {
-      *(short*)(buf) = 0;
-      buf += sizeof(short);
-   }
-  if (msg != NULL) {
-    *(short*)(buf) = strlen(msg);
-    buf += sizeof(short);
-    strncpy(buf, msg, strlen(msg));
-    buf += strlen(msg);
-  } else {
-    *(short*)(buf) = 0;
-    buf += sizeof(short);
+    short opcode,
+    const char *buf,
+    int len) {
+  char *buffer = sendBuf_;
+  buffer += sizeof(int);
+  *(short*)(buffer) = mode;
+  buffer += sizeof(short);
+  *(short*)(buffer) = opcode;
+  buffer += sizeof(short);
+  if (buf && len > 0) {
+    memcpy(buffer, buf, len);
+    buffer += len;
   }
-  *(int*)conn->sendBuf = buf - conn->sendBuf;
-  conn->sendLen = buf - conn->sendBuf;
+  *(int*)sendBuf_ = buffer - sendBuf_;
+  sendLen_ = buffer - sendBuf_;
+  bufferevent_write(conn->bev,
+      sendBuf_,
+      sendLen_);
+  
   return 0;
 }
-HpvConn* HpvParser::conn() {
-  return conn_;
-}
-HpvParser::HpvParser(HpvConn *conn):conn_(conn) {
-}
-void HpvParser::reg(int opcode, ServerProtocol*server) {
-  userProtocol_[opcode] = server;
+
+void HpvParser::reg(int mode,
+    ServerProtocol*server) {
+  userProtocol_[mode] = server;
 }
 
 void HpvParser::run(
+    HpvConn *conn,
     const char *data, 
     int len) {
   if (len < 4) {
@@ -56,17 +108,22 @@ void HpvParser::run(
   }
   short mode = *(short*)data;
   data += 2;
-  
-  LOG(INFO)  << "mode" << mode;
+  short opcode = *(short*)data;
+  data += 2;
+#if DEBUG_EVB
+  std::cout << "mode:" << mode
+   << "opcode:" << opcode << std::endl; 
+#endif
   auto protocal = userProtocol_[mode];
   if (protocal != nullptr) {
-    protocal->run(conn_, data, len-2);
+    protocal->run(conn, opcode, data, len-4);
   }
 }
 
 void ServerProtocol::serv(
     HpvConn*conn, 
+    short opcode,
     const char *data, 
     int len) {
-  run(conn,  data, len);
+  run(conn,  opcode, data, len);
 }
