@@ -27,6 +27,9 @@ class ServerProtocol {
     int readString(const char*buf,
         int &len,
         std::string &value);
+    int sendPack(
+        HpvConn*conn,
+        const HpvPack &pack);
 
     int  sendPack(
         HpvConn* conn,

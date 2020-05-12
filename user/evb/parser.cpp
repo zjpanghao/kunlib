@@ -71,6 +71,15 @@ const char *
 
 int ServerProtocol::sendPack(
     HpvConn* conn,
+    const HpvPack &pack) {
+  bufferevent_write(conn->bev,
+      pack.buf,
+      pack.len);
+  return 0;
+}
+
+int ServerProtocol::sendPack(
+    HpvConn* conn,
     short mode,
     short opcode,
     const char *buf,

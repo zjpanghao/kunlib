@@ -125,13 +125,19 @@ addServer(Hpv *hpv,
 void hpv_accept_cb(
     struct evconnlistener *,
     int fd,
-    struct sockaddr *, 
+    struct sockaddr *cli, 
     int socklen, 
     void *userData) {
   Hpv* hpv = (struct Hpv*)userData; 
   HpvConn *conn = new HpvConn;
   conn->hpv = hpv;
   conn->fd = fd;
+  struct sockaddr_in * cli_in =
+   (struct sockaddr_in*) cli;
+  const char *ipStr=
+    inet_ntoa(cli_in->sin_addr);
+  strncpy(conn->ip, ipStr, sizeof(conn->ip));
+  conn->port = ntohs(cli_in->sin_port);
   HpvPoolCb poolCb;
   poolCb.arg = (void*)conn;
   poolCb.cb = hpv_conn_cb;
