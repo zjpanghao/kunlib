@@ -50,9 +50,6 @@ static void
    HpvConn*conn = (HpvConn*)arg;
    struct evbuffer *output = bufferevent_get_output(conn->bev);
   int len;
-  if (conn->needClose) {
-	  hpv_conn_close(conn);
-  }
 
 }
 
@@ -88,6 +85,7 @@ static void
      for (auto &app : conn->hpv->apps) {
        app->onClose(conn);
      }
+
      hpv_conn_close(conn);
    }
    if (events & BEV_EVENT_CONNECTED) {
@@ -95,6 +93,13 @@ static void
    }
    //}
 if (events &BEV_EVENT_TIMEOUT) {
+  if (conn->needClose) {
+    for (auto &app : conn->hpv->apps) {
+      app->onClose(conn);
+    }
+	  hpv_conn_close(conn);
+    return;
+  }
   if (conn->timer != nullptr) {
     conn->timer->run();
   }

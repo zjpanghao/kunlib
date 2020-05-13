@@ -59,6 +59,7 @@ void hpv_send(HpvConn* conn,
 
 class HpvApp {
   public:
+    virtual ~HpvApp() = default;
     virtual void reg(int* code, 
         ServerProtocol **pro) = 0;
     virtual bool init() {};
