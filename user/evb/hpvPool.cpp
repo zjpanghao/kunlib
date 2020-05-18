@@ -40,7 +40,7 @@ HpvPool::HpvPool(int num) {
 void HpvThread::readCmd(int sock, short event, void *arg) {
   HpvThread *thread = (HpvThread*)arg;
   HpvPoolCb cb;
-  recv(sock, &cb, sizeof(cb), 0);
+  int n = recv(sock, &cb, sizeof(cb), 0);
   cb.cb(thread->base_, thread, cb.arg);
 }
 

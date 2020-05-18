@@ -34,17 +34,19 @@ void EvHttpDrv::start(
   if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
     return;
   }
-  std::map<std::string, HttpControl*> cmap;
+  //std::map<std::string, HttpControl*> cmap;
   for (int i  =0; i < nThread; i++) {
   struct event_base *evbase = event_base_new();
   struct evhttp *http    = evhttp_new(evbase);
   for (auto &generalControl : controls) {
+    auto gcnts = generalControl->getMapping();
     for (auto &control : 
-        generalControl->getMapping()) {
+        gcnts) {
+      HttpControl *cnt = new HttpControl(control);
       evhttp_set_cb(http, 
-          control.url.c_str(), 
+          cnt->url.c_str(), 
           generalCb, 
-          &control);
+          cnt);
     }
   }
   if (i == 0) {

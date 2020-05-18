@@ -22,6 +22,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include "timer/timer.h"
+#include "evb/evHpv.h"
 
 
 static void signal_cb(evutil_socket_t, short, void *);
@@ -36,17 +37,17 @@ HpvCore::HpvCore(
   
   hpv_->pool = new HpvPool(5);
 
-  struct sockaddr_in sin;
   hpv_->base = event_base_new();
   if (!hpv_->base) {
     LOG(ERROR) << "Could not initialize libevent!";
     return;
   }
-
-  memset(&sin, 0, sizeof(sin));
-  sin.sin_family = AF_INET;
-  sin.sin_port = htons(port);
+  server_ = port > 0;
   if (port > 0) {
+    struct sockaddr_in sin;
+    memset(&sin, 0, sizeof(sin));
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(port);
     hpv_->server = 
       evconnlistener_new_bind(hpv_->base, 
           hpv_accept_cb, (void *)hpv_,
@@ -55,7 +56,7 @@ HpvCore::HpvCore(
           sizeof(sin));
   }
 
-
+#if 0
   hpv_->signal_event = evsignal_new(hpv_->base, SIGINT, signal_cb, (void *)hpv_->base);
 
   if (!hpv_->signal_event 
@@ -63,6 +64,7 @@ HpvCore::HpvCore(
     fprintf(stderr, "Could not create/add a signal event!\n");
     return;
   }
+#endif
 
 }
 
@@ -71,8 +73,12 @@ void HpvCore::loop() {
   if (hpv_->server) {
     evconnlistener_free(hpv_->server);
   }
-  event_free(hpv_->signal_event);
+  //event_free(hpv_->signal_event);
   event_base_free(hpv_->base);
+}
+
+HpvConn* HpvCore::addServer(HpvServer &server) {
+  return ::addServer(hpv_, server);
 }
 
   static void

@@ -50,6 +50,8 @@ struct HpvConn {
   int port;
   bool server{true};
   std::shared_ptr<kun::Timer> timer{nullptr};
+  bool enable{false};
+  int connSeconds{5};
 };
 
 void hpv_send(HpvConn* conn, 
@@ -64,6 +66,7 @@ class HpvApp {
         ServerProtocol **pro) = 0;
     virtual bool init() {};
     virtual void conn(HpvConn*conn){};
+    virtual void hpvError(HpvConn*conn){};
     virtual void onClose(HpvConn*conn){};
     virtual void recv(HpvConn*conn, 
         const char *buf,
@@ -87,7 +90,7 @@ void hpv_accept_cb(
 
 void hpv_conn_close(HpvConn*conn);
 
-std::shared_ptr<HpvConn>
+HpvConn *
   addServer(Hpv *hpv,
   HpvServer &server) ;
 #endif
