@@ -2,17 +2,19 @@
 #define INCLUDE_PARSER_H
 #include <string>
 struct HpvConn;
+
+
 class ServerProtocol {
   private:
    static constexpr int MAX_SEND_LEN{1024};
   public:
-    struct HpvPack {
-      int len;
-      short mode;
-      short opcode;
-      char buf[MAX_SEND_LEN];
-    };
-    int write16(char* data, int &len,
+   struct HpvPack {
+     int len;
+     short mode;
+     short opcode;
+     char buf[MAX_SEND_LEN];
+   };
+   int write16(char* data, int &len,
         short value);
     int writeString(char *data,
         const std::string &s);

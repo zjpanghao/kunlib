@@ -72,10 +72,12 @@ const char *
 int ServerProtocol::sendPack(
     HpvConn* conn,
     const HpvPack &pack) {
-  bufferevent_write(conn->bev,
-      pack.buf,
+  if (pack.len > 0 && pack.len <= sizeof(pack)) {
+    bufferevent_write(conn->bev,
+      &pack,
       pack.len);
-  return 0;
+    return 0;
+  }
 }
 
 int ServerProtocol::sendPack(
