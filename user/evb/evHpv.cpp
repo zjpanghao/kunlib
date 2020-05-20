@@ -52,7 +52,6 @@ static void
  hpv_conn_writecb(
     struct bufferevent *bev, 
     void * arg){
-   std::cout << "write cb:" << std::endl;
    HpvConn*conn = (HpvConn*)arg;
    struct evbuffer *output = bufferevent_get_output(conn->bev);
   int len;
@@ -99,9 +98,10 @@ static void
     short events,
     void * arg){
    HpvConn *conn = (HpvConn*)arg;
-   LOG(INFO) << events ;
+   //LOG(INFO) << events ;
    if (events & BEV_EVENT_EOF) {
-     LOG(INFO) << "onclose" << conn->hpv->apps.size();
+     LOG(INFO) << "close apps:" 
+       << conn->hpv->apps.size();
      for (auto &app : conn->hpv->apps) {
        app->onClose(conn);
      }
@@ -109,29 +109,29 @@ static void
      hpv_conn_close(conn);
    }
 
-if (events &BEV_EVENT_TIMEOUT) {
-  if (conn->needClose) {
-    for (auto &app : conn->hpv->apps) {
-      app->onClose(conn);
-    }
-	  hpv_conn_close(conn);
-    return;
-  }
-}
-  if (conn->timer != nullptr) {
-    conn->timer->run();
-  }
-  
-  if (!conn->needClose) {
-    bufferevent_enable(conn->bev, EV_READ);
-  }
+   if (events &BEV_EVENT_TIMEOUT) {
+     if (conn->needClose) {
+       for (auto &app : conn->hpv->apps) {
+         app->onClose(conn);
+       }
+       hpv_conn_close(conn);
+       return;
+     }
+     if (conn->timer != nullptr) {
+       conn->timer->run();
+     }
 
+     if (!conn->needClose) {
+       bufferevent_enable(conn->bev, 
+           EV_READ);
+     }
 
+   }
  }
 
-static void
- hpv_conn_cb(
-    struct bufferevent *bev, 
+   static void
+     hpv_conn_cb(
+         struct bufferevent *bev, 
     short events,
     void * arg){
    //LOG(INFO) << "conn event:" << events;
@@ -245,14 +245,6 @@ void hpv_conn_cb(
          sizeof(sockaddr));
    }
    
-}
-
-void HpvApp::appSend(HpvConn* conn,
-    const char *buf,
-    int len) {
-  bufferevent_write(conn->bev, 
-      buf, 
-      len);
 }
 
 void hpv_send(HpvConn* conn,

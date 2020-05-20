@@ -9,6 +9,7 @@ class HpvApp;
 struct HpvServer;
 class HpvCore {
   public:
+   ~HpvCore();
    HpvCore(std::vector<HpvApp*> app, int port);
    void loop();
    Hpv *hpv() {

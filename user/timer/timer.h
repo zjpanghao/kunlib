@@ -16,7 +16,8 @@ class Timer {
        void run() {
          func();
        }
-      bool operator < (const TimerTask &a) {
+      bool operator < 
+        (const TimerTask &a) const {
         return stamp > a.stamp;
       }
 

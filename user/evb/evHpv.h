@@ -64,16 +64,13 @@ class HpvApp {
     virtual ~HpvApp() = default;
     virtual void reg(int* code, 
         ServerProtocol **pro) = 0;
-    virtual bool init() {};
+    virtual bool init() { return true;};
     virtual void conn(HpvConn*conn){};
     virtual void hpvError(HpvConn*conn){};
     virtual void onClose(HpvConn*conn){};
     virtual void recv(HpvConn*conn, 
         const char *buf,
         int len) {}
-    void appSend(HpvConn*conn,
-        const char *buf,
-        int len);
 };
 
 void hpv_conn_cb(

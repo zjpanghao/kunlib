@@ -27,6 +27,7 @@
 
 static void signal_cb(evutil_socket_t, short, void *);
 
+HpvCore::~HpvCore() = default;
 HpvCore::HpvCore(
    std::vector<HpvApp*> apps, int port) {
   for (auto app : apps) {
