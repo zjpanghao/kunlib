@@ -74,7 +74,7 @@ static void doConnectWork(HpvConn *conn) {
        hpv_conn_writecb, 
        hpv_error_cb, 
        conn);
-   struct timeval tv{30,0};
+   struct timeval tv{1,0};
    bufferevent_set_timeouts(conn->bev,
        &tv,
        &tv);
@@ -121,10 +121,8 @@ static void
        conn->timer->run();
      }
 
-     if (!conn->needClose) {
-       bufferevent_enable(conn->bev, 
-           EV_READ);
-     }
+     bufferevent_enable(conn->bev, 
+         EV_READ);
 
    }
  }
