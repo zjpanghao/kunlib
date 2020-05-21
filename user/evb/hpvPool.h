@@ -18,7 +18,7 @@ struct  HpvPoolCb  {
 
 class HpvThread {
   public:
-    HpvThread();
+    explicit HpvThread(int id);
     void execute(HpvPoolCb func);
     int rdr() {return rdr_;}
     int taskCount() {return taskCount_;}
@@ -27,6 +27,7 @@ class HpvThread {
     }
 
   private:
+    int id_;
     int taskCount_{0};
     int rdr_;
     int wdr_;

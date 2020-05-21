@@ -9,9 +9,11 @@
 #include <iostream>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include <glog/logging.h>
 void HpvThread::execute(HpvPoolCb func) {
   taskCount_++;
   int rc = send(wdr_, &func, sizeof(func), 0);
+  LOG(INFO) << "send to:" << wdr_ << "thd:"<< id_ <<  "rc:" << rc;
   
 }
 
@@ -31,7 +33,7 @@ void HpvPool::execute(HpvPoolCb func) {
 
 HpvPool::HpvPool(int num) {
  for (int i = 0; i < num; i++) {
-   std::unique_ptr<HpvThread> thd(new HpvThread());
+   std::unique_ptr<HpvThread> thd(new HpvThread(i));
        threads_.push_back(std::move(thd));
 
  }
@@ -46,6 +48,14 @@ void HpvThread::readCmd(int sock, short event, void *arg) {
 
 void HpvThread::run() {
   base_ = event_base_new();
+  event_ = event_new(base_, rdr_,
+      EV_READ | EV_PERSIST, &HpvThread::readCmd, this);
+  event_add(event_,NULL);
+  event_base_dispatch(base_);
+}
+
+HpvThread::HpvThread(int i):id_(i) {
+  t_.reset(new std::thread(&HpvThread::run,this));
   int       fds[2];
   if (evutil_socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {
     return;
@@ -54,12 +64,4 @@ void HpvThread::run() {
   evutil_make_socket_nonblocking(fds[1]);
   rdr_ = fds[0];
   wdr_ = fds[1];
-  event_ = event_new(base_, rdr_,
-      EV_READ | EV_PERSIST, &HpvThread::readCmd, this);
-  event_add(event_,NULL);
-  event_base_dispatch(base_);
-}
-
-HpvThread::HpvThread() {
-  t_.reset(new std::thread(&HpvThread::run,this));
 }
