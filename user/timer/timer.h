@@ -28,6 +28,7 @@ class Timer {
       TimerFunc func;
    };
 
+   Timer(bool backThread);
    Timer();
    ~Timer();
 #if 0
@@ -45,14 +46,16 @@ class Timer {
    void run();
 
    static Timer& getTimer() {
-      static Timer tm;
+      static Timer tm(true);
       return tm;
    }
 
 
  private:
+   void runThd();
+
    void start() {
-     t_= new std::thread(&Timer::run, this);   
+     t_= new std::thread(&Timer::runThd, this);   
      t_->detach();
    }
    std::vector<TimerTask> tasks_;

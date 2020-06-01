@@ -4,6 +4,19 @@
 #include <iostream>
 namespace kun {
   Timer::Timer() = default;
+  Timer::Timer(bool backThread) {
+    if (backThread) {
+      start();
+    }
+  }
+
+  void Timer::runThd() {
+    while (true) {
+      run();
+      sleep(1);
+    }
+  }
+
   Timer::~Timer() = default;
   void Timer::run() {
     std::vector<TimerTask> tasks;
