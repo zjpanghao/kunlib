@@ -37,7 +37,7 @@ void RedisPool::ReepThd() {
 }
 void RedisPool::Reep() {
   std::lock_guard<std::mutex> lock(lock_);
-  int nums = contextPool_.size() - activeSize_ - initialSize_;
+  int nums = contextPool_.size()  - initialSize_;
   auto it = contextPool_.begin(); 
   time_t now = time(NULL);
   while (nums > 0 && it != contextPool_.end()) {
