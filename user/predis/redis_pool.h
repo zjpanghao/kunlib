@@ -161,6 +161,7 @@ class RedisControl;
       std::string db_;
       std::string password_;
       int timeout_{100000};
+      int reepInx_{0};
       //std::condition_variable notEmpty_;
     };
 

@@ -38,17 +38,25 @@ void RedisPool::ReepThd() {
 void RedisPool::Reep() {
   std::lock_guard<std::mutex> lock(lock_);
   int nums = contextPool_.size()  - initialSize_;
-  auto it = contextPool_.begin(); 
-  time_t now = time(NULL);
-  while (nums > 0 && it != contextPool_.end()) {
-    auto &control = *it;
-    if (!control->CheckValid() || control->Timeout(now)) {
-      it = contextPool_.erase(it);
-      nums--;
-    } else {
-      it++;
-    }
+  if (nums <= 0) {
+    return;
   }
+  int inx = reepInx_ % contextPool_.size();
+  reepInx_ = (reepInx_ + 1) % contextPool_.size();
+  auto it = contextPool_.begin();
+  time_t now = time(NULL);
+  while (inx-- > 0 && it != contextPool_.end()) {
+      it++;
+      continue;
+  }
+  if (it != contextPool_.end()) {
+    auto &control = *it;
+    if (!control->CheckValid() 
+        || control->Timeout(now)) {
+      it = contextPool_.erase(it);
+    } 
+  }
+
 }
 
 void RedisPool::ReturnControl(std::shared_ptr<RedisControl> control) {
@@ -56,7 +64,6 @@ void RedisPool::ReturnControl(std::shared_ptr<RedisControl> control) {
   std::lock_guard<std::mutex> lock(lock_);
   contextPool_.push_front(control);
   activeSize_--;
-  //notEmpty_.notify_one();
 }
 
 std::shared_ptr<RedisControl> 
@@ -83,12 +90,13 @@ RedisPool::GetControlInner() {
   return nullptr;
 }
 
-  std::shared_ptr<RedisControl>  
+std::shared_ptr<RedisControl>  
 RedisPool::GetControl() {
   std::shared_ptr<RedisControl> control(nullptr);
   std::unique_lock<std::mutex> 
     lock(lock_);
   control= GetControlInner();
+
   return control;
 }
 
@@ -108,7 +116,7 @@ RedisControlGuard::RedisControlGuard(RedisPool *pool)
     redisPool_(pool),
     redisControl_(NULL) {
 
-}
+    }
 
 std::shared_ptr<RedisControl> 
 RedisControlGuard::GetControl() {

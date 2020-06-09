@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include <string.h>
+#include "hds.h"
 struct evconnlistener;
 struct event_base;
 struct sockaddr;
@@ -35,9 +36,7 @@ struct HpvConn {
    RECV_BODY
   };
   int bodySize;
-  char buf[1024];
-  char sendBuf[1024];
-  int sendLen;
+  hdb::Hds hdsBuf{NULL};
   int fd;
   bool needClose{false};
   Hpv *hpv{nullptr};

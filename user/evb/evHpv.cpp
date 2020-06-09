@@ -41,9 +41,13 @@ hpv_conn_readcb(
   if (len < conn->bodySize) {
     return;
   }
-  bufferevent_read(bev, conn->buf, conn->bodySize);
+  int qlen = hdb::hdsLen(conn->hdsBuf);
+  conn->hdsBuf =
+    hdb::makeRoom(conn->hdsBuf, conn->bodySize);
+  bufferevent_read(bev, conn->hdsBuf + qlen, conn->bodySize);
   conn->status = HpvConn::Status::RECV_HEAD;
-  (conn->parser)->run(conn, conn->buf, conn->bodySize);
+  (conn->parser)->run(conn, conn->hdsBuf, conn->bodySize);
+  hdb::hdsSetLen(conn->hdsBuf, 0);
   bufferevent_enable(bev, EV_WRITE);
 
 }
@@ -61,6 +65,10 @@ static void
 void hpv_conn_close(HpvConn* conn) {
    conn->thr->setTaskCount(
        conn->thr->taskCount() - 1);
+   if (conn->hdsBuf) {
+     hdb::hdsFree(conn->hdsBuf);
+     conn->hdsBuf = NULL;
+   }
 	 bufferevent_free(conn->bev);
    delete conn;
    //LOG(INFO) << "delete :" << conn;
@@ -89,6 +97,7 @@ static void doConnectWork(HpvConn *conn) {
     conn->parser->reg(code, prot);
     app->conn(conn);
   }
+  conn->hdsBuf = hdb::hdsnewlen(0);
 
 }
 
@@ -162,9 +171,6 @@ if (events &BEV_EVENT_TIMEOUT) {
 HpvConn*
 addServer(Hpv *hpv,
     HpvServer &server) {
-  //int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-  //int flag = fcntl(sockfd,F_GETFL,0);
-  //fcntl(sockfd,F_SETFL,flag|O_NONBLOCK);
   HpvConn *conn = new HpvConn;
   strcpy(conn->ip, server.ip);
   conn->port = server.port;
@@ -230,7 +236,6 @@ void hpv_conn_cb(
    if (conn->server) {
      doConnectWork(conn);
    }
-   //bufferevent_enable(bev, EV_READ);
    bufferevent_enable(bev, EV_WRITE);
    if (!conn->server) {
      struct sockaddr_in serv_addr;
