@@ -5,9 +5,13 @@
 #include <sstream>
 class RedisDataSource : public DataSource{
  public:
-  RedisDataSource(const kunyan::Config &config) : DataSource("redis", config) {
+  RedisDataSource(const kunyan::Config &config)
+    :RedisDataSource(config, "redis") {
+    }
+  RedisDataSource(const kunyan::Config &config,
+      const std::string &tag) : DataSource(tag, config) {
     std::string timeout = 
-      config.get("redis", "timeout");
+      config.get(tag, "timeout");
     if (!timeout.empty()) {
       std::stringstream ss;
       ss << timeout;

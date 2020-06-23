@@ -7,7 +7,7 @@ Hds hdsnewlen(int n) {
   struct HdsBuf *hdf = (struct HdsBuf*)p;
   hdf->len = n;
   hdf->alloc = n;
-  return (Hds)(p + sizeof(struct HdsBuf));
+  return (Hds)p + sizeof(struct HdsBuf);
 }
 
 void hdsSetLen(Hds s, int len) {
@@ -33,11 +33,15 @@ Hds makeRoom(Hds s, int n) {
   if (hdf->alloc - hdf->len >= n) {
     return s;
   }
-  int nlen = n < 1024*1024 ? 
-    2*(n + sizeof(struct HdsBuf) + hdf->len)
-    : (2*n + sizeof(struct HdsBuf) + hdf->len);
-  hdf->alloc = nlen - sizeof(struct HdsBuf);
-  void *p = realloc((char*)hdf, nlen);
+  int nlen = hdf->len + n;
+  if (nlen < 1024*1024 ) {
+    nlen *= 2;
+  } else {
+    nlen += 1024*1024;
+  }
+  hdf->alloc = nlen;
+  void *p = realloc((char*)hdf, 
+      sizeof(struct HdsBuf) + nlen);
   return (Hds)p + sizeof(struct HdsBuf);
 }
 

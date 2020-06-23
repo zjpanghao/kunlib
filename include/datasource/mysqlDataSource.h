@@ -5,7 +5,12 @@
 #include <sstream>
 class MysqlDataSource : public DataSource{
  public:
-  MysqlDataSource(const kunyan::Config &config) : DataSource("mysql", config) {
+  MysqlDataSource(const kunyan::Config &config)
+    : MysqlDataSource(config, "mysql") {
+  }
+
+  MysqlDataSource(const kunyan::Config &config,
+      const std::string &tag) : DataSource(tag, config) {
   }
   MysqlDataSource(const std::string &item, const kunyan::Config &config) : DataSource(item, config) {
   }
