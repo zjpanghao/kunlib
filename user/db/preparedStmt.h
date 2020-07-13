@@ -35,6 +35,7 @@ class PreparedStmt {
     int size() const;
 
   private:
+    const std::string NULLSTR_{""};
     std::string sql_;
     std::vector<ElemType> types_;
     std::map<int, int> intValues_;

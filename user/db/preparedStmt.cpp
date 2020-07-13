@@ -12,11 +12,11 @@ PreparedStmt::ElemType PreparedStmt::getType(int i) const{
 
 const std::string & PreparedStmt::getString(int i) const{
   if (getType(i) != ElemType::STRING) {
-    return "";
+    return NULLSTR_;
   }
   auto it = stringValues_.find(i);
   if (it == stringValues_.end()) {
-    return "";
+    return NULLSTR_;
   }
   return it->second;
 }

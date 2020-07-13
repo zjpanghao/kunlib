@@ -78,6 +78,7 @@ int ServerProtocol::sendPack(
       pack.len);
     return 0;
   }
+  return -1;
 }
 
 int ServerProtocol::sendPack(
