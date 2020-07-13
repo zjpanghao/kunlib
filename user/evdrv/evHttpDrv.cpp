@@ -73,6 +73,7 @@ void EvHttpDrv::sendResponse(EvHttpRequest *req,
   evbuffer *response = evbuffer_new();
   evbuffer_add_printf(response, "%s", s.c_str());
   evhttp_send_reply(req->http, 200, "OK", response);
+  evbuffer_free(response);
 }
 
 void EvHttpDrv::sendResponseBody(EvHttpRequest *req,
@@ -80,6 +81,7 @@ void EvHttpDrv::sendResponseBody(EvHttpRequest *req,
   evbuffer *response = evbuffer_new();
   evbuffer_add_printf(response, "%s", value.c_str());
   evhttp_send_reply(req->http, 200, "OK", response);
+  evbuffer_free(response);
 }
 
 int EvHttpDrv::evReqMethod(EvHttpRequest*req) {
