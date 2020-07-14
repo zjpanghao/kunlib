@@ -37,8 +37,8 @@ class ListVecAdaptor {
     }
 
   private:
-    std::vector<T> *vecData_;
-    std::list<T> *listData_;
+    std::vector<T> *vecData_{nullptr};
+    std::list<T> *listData_{nullptr};
 };
 
 class SqlTemplate {
