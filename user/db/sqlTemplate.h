@@ -102,6 +102,7 @@ class SqlTemplate {
           rc = -1;
         }
         END_TRY;
+        return rc;
       }
 
     template <class T>
