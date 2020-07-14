@@ -2,12 +2,45 @@
 #define INCLUDE_SQL_TEMPLATE_H
 #include <string>
 #include <list>
+#include <vector>
 #include "dbpool.h"
 #include "rowMapper.h"
 #include "glog/logging.h"
 #include <memory>
 #include "preparedStmt.h"
 class DBPool;
+template <class T>
+class ListVecAdaptor {
+  public:
+    explicit ListVecAdaptor(std::vector<T> &vecData) 
+      :vecData_(&vecData) {
+    }
+    explicit ListVecAdaptor(std::list<T> &listData) 
+      :listData_(&listData) {
+    }
+
+    void push_back(T t) {
+      if (vecData_) {
+        vecData_->push_back(t);
+      } else {
+        listData_->push_back(t);
+      }
+    }
+
+    void clear() {
+      if (vecData_) {
+        vecData_->clear();
+      } else {
+        listData_->clear();
+      }
+
+    }
+
+  private:
+    std::vector<T> *vecData_;
+    std::list<T> *listData_;
+};
+
 class SqlTemplate {
   public:
     explicit SqlTemplate(std::shared_ptr<DBPool> pool) 
@@ -59,12 +92,11 @@ class SqlTemplate {
       END_TRY;
       return rc;
     }
-
     template <class T>
       int query(
           const PreparedStmt &ps,
           RowMapper<T>   &mapper,
-          std::vector<T> &l) {
+          ListVecAdaptor<T> &l) {
         int rc = 0;
         Connection_T conn; 
         DBPoolGuard guard(pool_, &conn);
@@ -103,6 +135,16 @@ class SqlTemplate {
         }
         END_TRY;
         return rc;
+    }
+
+    template <class T>
+      int query(
+          const PreparedStmt &ps,
+          RowMapper<T>   &mapper,
+          std::vector<T> &l) {
+        ListVecAdaptor<T> ada(l);
+        return query(ps,
+            mapper, ada);
       }
 
     template <class T>
@@ -110,44 +152,8 @@ class SqlTemplate {
           const PreparedStmt &ps,
           RowMapper<T>   &mapper,
           std::list<T> &l) {
-        int rc = 0;
-        Connection_T conn; 
-        DBPoolGuard guard(pool_, &conn);
-        if (conn == NULL) {
-          return -1;
-        }
-        ResultSet_T r;
-        TRY {
-          PreparedStatement_T p
-            = Connection_prepareStatement(conn, ps.sql().c_str());
-          setPreparedStmt(ps, p);
-          r = PreparedStatement_executeQuery(p);
-        } CATCH(SQLException) {
-          LOG(ERROR) << "load person faces error" << Exception_frame.message;
-          rc = -1;
-          l.clear();
-        }
-        END_TRY;
-        if (rc != 0) {
-          return rc;
-        }
-        TRY {
-          while (ResultSet_next(r)) {
-            T t;
-            int count = ResultSet_getColumnCount(r);
-            int rt = 0;
-            rt = mapper.mapRow(r, 0, t);
-            if(rt == 0) {
-              l.push_back(std::move(t));
-            }
-          }
-        } CATCH(SQLException) {
-          LOG(ERROR) << "query error:" << Exception_frame.message;
-          l.clear();
-          rc = -1;
-        }
-        END_TRY;
-        return rc;
+        ListVecAdaptor<T> ada(l);
+        return query(ps, mapper, ada);
       }
 
     template <class T>
