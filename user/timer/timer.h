@@ -54,11 +54,7 @@ class Timer {
 
  private:
    void runThd();
-   struct event_base *base_;
-   struct event *ev_;
-
    void start();
-
    std::vector<TimerTask> tasks_;
    std::thread *t_;
    mutable std::mutex lock_;

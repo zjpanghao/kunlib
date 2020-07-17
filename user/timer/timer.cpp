@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <glog/logging.h>
 #include <iostream>
-#include <event2/event.h>
 namespace kun {
   Timer::Timer() = default;
   Timer::Timer(bool backThread) : backThread_(backThread) {
