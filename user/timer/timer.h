@@ -6,6 +6,9 @@
 #include <mutex>
 #include <thread>
 #include <algorithm>
+#include <condition_variable>
+struct event_base;
+struct event;
 
 namespace kun {
 class Timer {
@@ -31,14 +34,11 @@ class Timer {
    Timer(bool backThread);
    Timer();
    ~Timer();
-#if 0
-   Timer(const Timer &timer);
-   Timer& operator=(Timer &timer);
-   Timer(Timer &&timer);
-   Timer& operator=(Timer &&timer);
-#endif
+   static void timeoutCb(int, short, void*);
 
    int addFunc(int sec, int count, TimerFunc func);
+   int addFuncLocal(int sec, int count, TimerFunc func,
+       bool notify);
 
    void getTimeoutTasks(
        std::vector<TimerTask> &tasks) ;
@@ -50,17 +50,20 @@ class Timer {
       return tm;
    }
 
+   int getNextTimeout();
 
  private:
    void runThd();
+   struct event_base *base_;
+   struct event *ev_;
 
-   void start() {
-     t_= new std::thread(&Timer::runThd, this);   
-     t_->detach();
-   }
+   void start();
+
    std::vector<TimerTask> tasks_;
    std::thread *t_;
    mutable std::mutex lock_;
+   std::condition_variable notEmpty_;
+   bool backThread_{false};
 };
 
 }

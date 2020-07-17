@@ -2,37 +2,62 @@
 #include <algorithm>
 #include <glog/logging.h>
 #include <iostream>
+#include <event2/event.h>
 namespace kun {
   Timer::Timer() = default;
-  Timer::Timer(bool backThread) {
+  Timer::Timer(bool backThread) : backThread_(backThread) {
     if (backThread) {
-      start();
+     start();
     }
   }
 
   void Timer::runThd() {
     while (true) {
       run();
-      sleep(1);
+      std::unique_lock<std::mutex> ulock(lock_);
+      int sec = getNextTimeout();
+      if (sec < 0) {
+        notEmpty_.wait(ulock);
+      } else if (sec > 0){
+        notEmpty_.wait_for(ulock, 
+          std::chrono::seconds(sec));
+      }
     }
   }
 
   Timer::~Timer() = default;
+
   void Timer::run() {
     std::vector<TimerTask> tasks;
     getTimeoutTasks(tasks);
+
     for (auto &task : tasks) {
       task.run();
     }
+
     for (auto &task :tasks) {
       if (!task.everest && --task.callCnt <= 0) {
         continue;
       }
-      addFunc(task.seconds, task.callCnt, task.func);
+      addFuncLocal(
+          task.seconds, task.callCnt, task.func,
+          false);
     }
   }
 
-  void Timer::getTimeoutTasks(std::vector<TimerTask> &tasks) {
+  int Timer::getNextTimeout() {
+    int sec = 0;
+    if (!tasks_.empty()) {
+      sec = tasks_.front().stamp -time(NULL);
+      if (sec < 0) { sec = 0;}
+    } else {
+      sec = -1;
+    }
+    return sec;
+  }
+
+  void Timer::getTimeoutTasks(
+      std::vector<TimerTask> &tasks) {
     long current = time(NULL);
     std::lock_guard<std::mutex> guard(lock_);
     while (!tasks_.empty()) {
@@ -48,9 +73,10 @@ namespace kun {
 
   }
 
-int Timer::addFunc(int sec,
+int Timer::addFuncLocal(int sec,
     int count, 
-    TimerFunc func) {
+    TimerFunc func,
+    bool notify) {
   TimerTask tb;
   tb.seconds = sec;
   tb.stamp = sec + time(NULL);
@@ -62,26 +88,23 @@ int Timer::addFunc(int sec,
   std::push_heap(tasks_.begin(), 
       tasks_.end()
       );
-  return 0;
-}
-
-}
-
-void testFunc(void *a) {
-  std::cout << time(NULL) << "test" << *(int*)a << std::endl;
-}
-
-int main() {
-  kun::Timer &tm = kun::Timer::getTimer();
-  
-  int b = 3;
-  int a = 2;;
-  std::function<void()> func = std::bind(testFunc, &a);
-  tm.addFunc(10, 10, func);
-  int cnt = 100;
-  while (true) {
-    sleep(1);
+  if(backThread_ && notify) {
+    notEmpty_.notify_one();
   }
   return 0;
+}
+
+int Timer::addFunc(int sec,
+    int count, 
+    TimerFunc func) {
+  addFuncLocal(sec, count, func, true);
+  return 0;
+}
+
+void Timer::start() {
+  t_= new std::thread(&Timer::runThd, this);   
+  t_->detach();
+}
+
 }
 
