@@ -6,34 +6,46 @@
 #include <string>
 #include <list>
 #include <vector>
-#include <hiredis.h>
+#include <hiredis/hiredis.h>
 #include <string.h>
 #include <glog/logging.h>
 #include "redis_cmd.h"
 #include "redis_pool.h"
 #include "datasource/redisDataSource.h"
+#include <condition_variable>
 namespace kunyan{
   class Config;
   class RedisDataSource;
 }
-
+class RedisControl;
+#if 0
     class RedisControl {
      public:
-      RedisControl(std::string ip, int port, std::string db, std::string password) : idle_(true) {
+      bool connect() {
         struct timeval ta = {2, 0};
         int rc = 0;
-        if ((rc = cmd_.Connect(ip.c_str(), port, ta))!= 0) {
-          LOG(ERROR) << "redis connn error " << rc << " " << "ip:" << ip << "port:" <<  port;
-          return;
+        if ((rc = cmd_.Connect(ip_.c_str(), port_, ta))!= 0) {
+          LOG(ERROR) << "redis connn error " << rc << " " << "ip:" << ip_ << "port:" <<  port_;
+          return false;
         }
 
-        if (password != "" && !Auth(password)) {
-          LOG(ERROR) << "error passwd" << password;
+        if (password_ != "" && !Auth(password_)) {
+          LOG(ERROR) << "error passwd" << password_;
         }
 
-        if (!Select(db)) {
-          LOG(ERROR) << "error select" << db;
+        if (!Select(db_)) {
+          LOG(ERROR) << "error select" << db_;
         }
+        struct timeval tv;
+        tv.tv_sec = 0;
+        tv.tv_usec = 200000;
+        cmd_.setTimeout(tv);
+        return true;
+      }
+
+      RedisControl(std::string ip, int port, std::string db, std::string password) : ip_(ip), port_(port), db_(db), 
+      password_(password),
+      idle_(true) {
       }
        
       ~RedisControl() {
@@ -55,7 +67,15 @@ namespace kunyan{
         return cmd_.SetValue(key, value);
       }
 
+      bool SetValue(const std::string &key,       int value) {
+        return cmd_.SetValue(key, value);
+      }
+
       bool SetExValue(const std::string &key, int seconds, const std::string &value) {
+        return cmd_.SetExValue(key, seconds, value);
+      }
+
+      bool SetExValue(const std::string &key, int seconds, int value) {
         return cmd_.SetExValue(key, seconds, value);
       }
 
@@ -78,160 +98,84 @@ namespace kunyan{
         return cmd_.GetValue(key, value);
       }
 
+      bool GetValue(const std::string key , int *value) {
+        return cmd_.GetValue(key, value);
+      }
+
       bool GetHashValue(const std::string &hash ,const std::string &key , std::string *value) {
         return cmd_.GetHashValue(hash, key, value);
       }
 
-      time_t last_access() {
-        return last_access_;
+      time_t lastAccess() {
+        return lastAccess_;
       }
       
-      void set_last_access(time_t now) {
-        last_access_ = now;
+      void setLastAccess(time_t now) {
+        lastAccess_ = now;
       }
 
       bool Timeout(time_t now) {
-        return now > last_access_ && now - last_access_ > 60;
+        return now > lastAccess_ && now - lastAccess_ > 60;
       }
+
      private:
-      // redisContext *context_;
       RedisCmd   cmd_;
+      std::string ip_;
+      int port_;
+      std::string password_;
+      std::string db_;
       bool idle_;
-      time_t last_access_;
+      time_t lastAccess_;
 };
+#endif
 
     class RedisPool {
      public:
-      RedisPool(const std::string &ip, 
-                int port, 
-                int normal_size, 
-                int max_size,
-                std::string db,
-                std::string password) 
-          : normal_size_(normal_size), 
-            max_size_(max_size),
-            active_num_(0),
-            ip_(ip),
-            port_(port),
-            db_(db),
-            password_(password) {
-        Init();
-      }
+      RedisPool(const RedisDataSource &dataSource);
 
-      RedisPool(const RedisDataSource &dataSource) 
-          : normal_size_(dataSource.minSize()), 
-            max_size_(dataSource.maxSize()),
-            active_num_(0),
-            ip_(dataSource.ip()),
-            port_(dataSource.port()),
-            db_(dataSource.db()),
-            password_(dataSource.password()) {
+      std::shared_ptr<RedisControl> 
+        GetControl();
+      std::shared_ptr<RedisControl> 
+        GetControlInner();
 
-
-      }
-
-      std::shared_ptr<RedisControl> GetControl() {
-        std::lock_guard<std::mutex> lock(lock_);
-        while (!context_pool_.empty()) {
-          auto control = std::move(context_pool_.front());
-          context_pool_.pop_front();
-          if (control->CheckValid()) {
-            active_num_++;
-            return control;
-          }
-        } 
-
-        if (active_num_ < max_size_) {
-          std::shared_ptr<RedisControl> control(new RedisControl(ip_, port_, db_, password_));
-          if (control->CheckValid()) {
-            context_pool_.push_back(control);
-            active_num_++;
-            return control;
-          }
-        }
-        return NULL;
-      }
-
-      void ReturnControl(std::shared_ptr<RedisControl> control) {
-        control->set_last_access(time(NULL));
-        std::lock_guard<std::mutex> lock(lock_);
-        context_pool_.push_back(control);
-        active_num_--;
-      }
+      void ReturnControl(std::shared_ptr<RedisControl> control);
       
-      void Reep() {
-        std::lock_guard<std::mutex> lock(lock_);
-        int nums = context_pool_.size() - normal_size_;
-        auto it = context_pool_.begin(); 
-        time_t now = time(NULL);
-        while (nums > 0 && it != context_pool_.end()) {
-          auto &control = *it;
-          if (!control->CheckValid() || control->Timeout(now)) {
-            it = context_pool_.erase(it);
-            nums--;
-          } else {
-            it++;
-          }
-        }
-      }
+      void Reep();
 
-      void ReepThd() {
-        while (1) {
-          Reep();
-          ::sleep(30);
-        }
-      }
+      void ReepThd();
 
-      void Init() {
-        for (int i = 0; i < normal_size_; i++) { 
-          std::shared_ptr<RedisControl> control(new RedisControl(ip_, port_, db_, password_));
-          if (control->CheckValid()) 
-            context_pool_.push_back(control);
-        }
-        std::thread reap_thd(&RedisPool::ReepThd, this);
-        reap_thd.detach();
-      }
+      void Init();
+
+      int size() const ;
+
+      int activeSize() const;
 
      private:
-      std::mutex  lock_;
-      std::list<std::shared_ptr<RedisControl> > context_pool_;
-      int normal_size_;
-      int max_size_;
-      int active_num_;
+      mutable std::mutex  lock_;
+      std::list<std::shared_ptr<RedisControl> > contextPool_;
+      int initialSize_;
+      int maxSize_;
+      int activeSize_;
       std::string ip_;
       int port_;
       std::string db_;
       std::string password_;
+      int timeout_{100000};
+      int reepInx_{0};
+      //std::condition_variable notEmpty_;
     };
 
 class RedisControlGuard {
   public:
-   RedisControlGuard(RedisPool *pool)
-       :
-     redis_pool_(pool),
-     redisControl_(NULL) {
-     
-   }
+   RedisControlGuard(RedisPool *pool);
 
-   std::shared_ptr<RedisControl> GetControl() {
-     if (redis_pool_ == NULL) {
-       return NULL;
-     }
-     redisControl_ = redis_pool_->GetControl();
-     return redisControl_;
-   }
-
-   ~RedisControlGuard() {
-     if (redis_pool_ && redisControl_ != NULL) {
-       redis_pool_->ReturnControl(redisControl_);
-     } 
-   }
+   std::shared_ptr<RedisControl> 
+     GetControl();
+   ~RedisControlGuard();
 
   private:
    std::shared_ptr<RedisControl> redisControl_;
-   RedisPool *redis_pool_;
+   RedisPool *redisPool_;
 };
 
-void initRedisPool(const kunyan::Config &config); 
-RedisPool* getRedisPool();
 #endif

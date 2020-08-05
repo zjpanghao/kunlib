@@ -16,7 +16,7 @@ include_directories(
 link_directories(${KUN}/libs
 					)
 
-add_library(dbpool SHARED dbpool.cpp)
+add_library(dbpool SHARED preparedStmt.cpp  dbpool.cpp)
 target_link_libraries(dbpool  zdb glog  )
 SET_TARGET_PROPERTIES(dbpool PROPERTIES VERSION 3 )
 

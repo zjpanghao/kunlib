@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 2.8)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${KUN}/libs)
+set(SRC_LIST cpost.cpp)
+add_definitions(-g -fPIC -std=c++11)
+include_directories(/usr/local/include)
+add_library(cpost SHARED ${SRC_LIST})
+LINK_DIRECTORIES(${KUN}/libs /usr/local/lib )
+target_link_libraries(cpost  curl  ssl crypto  glog pthread)

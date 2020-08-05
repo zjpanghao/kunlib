@@ -4,14 +4,6 @@
 #include <sstream>
 class DataSource {
  public:
-  DataSource(const std::string &ip,
-             const int  port,
-             const std::string &db,
-             const std::string &user,
-             const std::string &password)
-    : ip_(ip), port_(port), db_(db), user_(user), password_(password) {
-
-    }
   DataSource(const std::string &item, const kunyan::Config &config) {
     std::stringstream ss;
     ss.clear();
@@ -39,7 +31,31 @@ class DataSource {
     ss.str("");
     ss << config.get(item, "pass");
     ss >> password_;
+
+    ss.clear();
+    ss.str("");
+
+    ss << config.get(item, "initialSize");
+    if (ss.str() != "") {
+      ss >> initialSize_;
+    }
+
+    ss.str("");
+    ss.clear();
+    ss << config.get(item, "maxSize");
+    if (ss.str() != "") {
+      ss >> maxSize_;
+    }
+
+    ss.str("");
+    ss.clear();
+    ss << config.get(item, "reapSec");
+    if (ss.str() != "") {
+      ss >> reapSec_;
+    }
   }
+
+  virtual ~DataSource() = default;
 
   std::string ip() const {
     return ip_;
@@ -61,11 +77,19 @@ class DataSource {
     return password_;
   }
 
+  int initialSize() const { return initialSize_;}
+  int maxSize() const { return maxSize_;}
+
+  int reapSec() const {return reapSec_;}
+
  private:
    std::string ip_;
    int port_;
    std::string db_;
    std::string user_;
    std::string password_;
+   int initialSize_{0};
+   int maxSize_{10};
+   int reapSec_{60};
 };
 #endif

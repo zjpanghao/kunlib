@@ -1,3 +1,5 @@
+#ifndef INCLUDE_PBASE64_H
+#define INCLUDE_PBASE64_H
 #include <string.h>
 #include <vector>
 #include <string>
@@ -12,3 +14,4 @@ class Base64 {
   unsigned char vtable[128];
   char table[64];
 };
+#endif

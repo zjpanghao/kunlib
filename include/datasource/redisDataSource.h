@@ -5,36 +5,28 @@
 #include <sstream>
 class RedisDataSource : public DataSource{
  public:
-  RedisDataSource(const std::string &ip,
-             const int  port,
-             const std::string &db,
-             const std::string &user,
-             const std::string &password)
-    : DataSource(ip, port, db, user, password) {
-
-  }
-
-  RedisDataSource(const kunyan::Config &config) : DataSource("redis", config) {
-    std::stringstream ss;
-    ss << config.get("redis", "minSize");
-    if (ss.str() != "") {
-      ss >> minSize_;
+  RedisDataSource(const kunyan::Config &config)
+    :RedisDataSource(config, "redis") {
     }
-
-    ss.str("");
-    ss.clear();
-    ss << config.get("redis", "maxSize");
-    if (ss.str() != "") {
-      ss >> maxSize_;
+  RedisDataSource(const kunyan::Config &config,
+      const std::string &tag) : DataSource(tag, config) {
+    std::string timeout = 
+      config.get(tag, "timeout");
+    if (!timeout.empty()) {
+      std::stringstream ss;
+      ss << timeout;
+      ss >> timeout_;
     }
   }
-  int minSize() const { return minSize_;}
-  int maxSize() const { return maxSize_;}
-  
+
+  int timeout() const {
+    return timeout_;
+  }
 
  private:
-  int minSize_{0};
-  int maxSize_{10};
+  int timeout_{100000};
+
+
 };
 #endif
 

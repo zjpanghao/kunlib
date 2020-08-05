@@ -5,16 +5,12 @@
 #include <sstream>
 class MysqlDataSource : public DataSource{
  public:
-  MysqlDataSource(const std::string &ip,
-             const int  port,
-             const std::string &db,
-             const std::string &user,
-             const std::string &password)
-    : DataSource(ip, port, db, user, password) {
-
+  MysqlDataSource(const kunyan::Config &config)
+    : MysqlDataSource(config, "mysql") {
   }
 
-  MysqlDataSource(const kunyan::Config &config) : DataSource("mysql", config) {
+  MysqlDataSource(const kunyan::Config &config,
+      const std::string &tag) : DataSource(tag, config) {
   }
   MysqlDataSource(const std::string &item, const kunyan::Config &config) : DataSource(item, config) {
   }
