@@ -49,5 +49,6 @@ class AliMail {
   std::once_flag flag_;
   std::string name_;
   std::string pass_;
+  char bodyBuf_[1024*10];
 };
 #endif

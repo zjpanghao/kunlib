@@ -20,6 +20,10 @@ AliConn::AliConn() {
   std::cout << "sock:" << sock_ << std::endl;
 }
 
+bool AliConn::sentryClose() {
+ return 1 == readSentry(sock_);
+}
+
 AliConn::~AliConn() {
   close(sock_);
 }

@@ -63,11 +63,9 @@ int AliMail::login(const std::string &userName,
 
 AliMail::AliMail(const std::string &name,
     const std::string &pass) :name_(name),pass_(pass){
-  init();
 }
 
 AliMail::~AliMail() {
-  conn_->sendMess( "QUIT\r\n", aliProcess, this);
   delete conn_;
 }
 
@@ -85,6 +83,14 @@ int AliMail::init() {
 int AliMail::sendMail(const std::string &subject,
     const std::string &body,
     const std::string &to) {
+  if (!conn_) {
+    conn_ = new AliConn();
+  }
+
+  if (conn_->isClose() || conn_->sentryClose()) {
+    delete conn_;
+    init();
+  }
   conn_->sendMess("MAIL FROM:<panghao@221data.com>",
       aliProcess, this);
   conn_->sendMess("RCPT TO:<panghao@221data.com>",
@@ -97,9 +103,12 @@ int AliMail::sendMail(const std::string &subject,
   conn_->sendMess(buf,NULL, NULL);
   snprintf(buf, sizeof(buf), "to:<%s>\r\n\r\n", to.c_str());
   conn_->sendMess(buf, NULL, NULL);
-  snprintf(buf, sizeof(buf),"%s\r\n.\r\n",
+  snprintf(bodyBuf_, sizeof(bodyBuf_),"%s\r\n.\r\n",
       body.c_str());
-  conn_->sendMess(buf, aliProcess, this);
+  conn_->sendMess(bodyBuf_, aliProcess, this);
+  conn_->sendMess("QUIT\r\n", aliProcess, this);
+  delete conn_;
+  conn_ = NULL;
   return 0;
 }
 

@@ -46,6 +46,34 @@ int tcp_server(const char *ip, int port) {
   return sock;
 }
 
+int readSentry(int sock) {
+  fd_set rset;
+  struct timeval tv = {1, 0};
+  while (true) {
+    FD_ZERO(&rset);
+    FD_SET(sock, &rset);
+    int rc = select(sock + 1, 
+        &rset, NULL, NULL, NULL);
+    if (rc < 0) {
+      return 1;
+    } else if (rc == 0) {
+      return 0;
+    } else {
+      if (FD_ISSET(sock, &rset)) {
+        char c;
+        int tmp =recv(sock, &c, 1, 0);
+        if (tmp == 0) {
+          return 1;
+        } else if (tmp < 0 && errno != EINTR) {
+          return 1;
+        }
+      }
+
+    }
+  }
+  return 0;
+}
+
 int readLine(int sock, char *buffer, int len) {
   const int BUFSIZE = 3;
   char buf[BUFSIZE];
@@ -75,4 +103,5 @@ int readLine(int sock, char *buffer, int len) {
   }
   return -1;
 }
+
 
