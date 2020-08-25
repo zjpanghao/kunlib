@@ -2,6 +2,7 @@
 #define INCLUDE_ALIM_H
 #include <string>
 #include <mutex>
+#include <memory>
 class AliConn;
 class AliMail {
  public:
@@ -41,7 +42,7 @@ class AliMail {
     state_ = st;
   }
  private:
-  AliConn *conn_{nullptr};
+  std::unique_ptr<AliConn> conn_{nullptr};
 
   static AliDriver drivers_[] ;
   int ehlo();

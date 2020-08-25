@@ -66,11 +66,10 @@ AliMail::AliMail(const std::string &name,
 }
 
 AliMail::~AliMail() {
-  delete conn_;
 }
 
 int AliMail::init() {
-  conn_ = new AliConn();
+  conn_.reset(new AliConn());
   int rc = 0;
   rc = ehlo();
   if (rc != 0) {
@@ -84,11 +83,11 @@ int AliMail::sendMail(const std::string &subject,
     const std::string &body,
     const std::string &to) {
   if (!conn_) {
-    conn_ = new AliConn();
+    conn_.reset( new AliConn());
   }
 
   if (conn_->isClose() || conn_->sentryClose()) {
-    delete conn_;
+    conn_.reset();
     init();
   }
   conn_->sendMess("MAIL FROM:<panghao@221data.com>",
@@ -107,8 +106,7 @@ int AliMail::sendMail(const std::string &subject,
       body.c_str());
   conn_->sendMess(bodyBuf_, aliProcess, this);
   conn_->sendMess("QUIT\r\n", aliProcess, this);
-  delete conn_;
-  conn_ = NULL;
+  conn_.reset();
   return 0;
 }
 
