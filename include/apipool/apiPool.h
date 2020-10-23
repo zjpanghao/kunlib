@@ -40,9 +40,10 @@ class ApiBuffer {
     }
     return apis_.empty() ? -1 : 0; 
   }
+  template <class CT=T>
   int init(int bufferNums, const kunyan::Config &config) {
     for (int i = 0; i < bufferNums; i++) {
-      auto api = getInitApi();
+      auto api = getInitApi<CT>();
       api->init(config);
       if (api != nullptr) {
         apis_.push_back(api);
@@ -71,10 +72,12 @@ class ApiBuffer {
   }
 
  private:
+  template <class CT=T>
   std::shared_ptr<T> getInitApi() {
-    std::shared_ptr<T> api(new T());
+    std::shared_ptr<T> api(new CT());
     return api;
   }
+  
   std::list<std::shared_ptr<T>> apis_;
   std::condition_variable bufferFull_;
   std::mutex lock_;
