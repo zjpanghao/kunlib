@@ -24,7 +24,6 @@ class AliMail {
   
   AliMail(const std::string &name,
       const std::string &pass);
-  ~AliMail();
 
   int login(const std::string &userName,
           const std::string &pass);
