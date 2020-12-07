@@ -49,7 +49,12 @@ class Timer {
       static Timer tm(true);
       return tm;
    }
-
+	 
+/*
+ *return     0   : already timeout
+ *         > 0 : timeout task seconds
+ *         < 0   : tasks empty
+*/
    int getNextTimeout();
 
  private:
