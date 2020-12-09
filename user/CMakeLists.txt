@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-set (KUN /home/test/github/kunlib)
+set (KUN ~/github/kunlib)
 #set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 add_subdirectory(config)
 add_subdirectory(pbase64)
