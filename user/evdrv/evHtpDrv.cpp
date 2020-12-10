@@ -10,7 +10,7 @@ EvHtpDrv& EvHtpDrv::getDrv() {
 }
 
 int EvHtpDrv::evkvsCb(evhtp_kv_t * kv, void * arg) {
-  Json::Value *v = (Json::Value*)arg;
+  pson::Json::Value *v = (pson::Json::Value*)arg;
   if (kv == NULL) {
     LOG(ERROR) << "error kv";
     return 0;
@@ -24,7 +24,7 @@ int EvHtpDrv::evkvsCb(evhtp_kv_t * kv, void * arg) {
   return 0;
 }
 
-bool EvHtpDrv::getQueryJson(EvHttpRequest*req, Json::Value &root) {
+bool EvHtpDrv::getQueryJson(EvHttpRequest*req, pson::Json::Value &root) {
   switch (evReqMethod(req)) {
     case htp_method_POST:
       getBufferJson(
@@ -58,7 +58,7 @@ void EvHtpDrv::generalCb(
 }
 
 void EvHtpDrv::sendResponse(EvHttpRequest *req,
-    const Json::Value &value) {
+    const pson::Json::Value &value) {
   std::string s = value.toStyledString();
   evbuffer *response = req->htp->buffer_out;
   evbuffer_add_printf(response, "%s", s.c_str());

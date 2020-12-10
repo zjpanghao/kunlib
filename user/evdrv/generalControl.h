@@ -13,11 +13,11 @@ namespace kunyan {
 
 struct HttpControl {
   std::string url;
-  std::function<int(const Json::Value &root,
-      Json::Value &result)> jsonCb;
+  std::function<int(const pson::Json::Value &root,
+      pson::Json::Value &result)> jsonCb;
   //int (*jsonCb)(const Json::Value &root,
    //  Json::Value &result); 
-  int (*bodyCb)(const Json::Value &root,
+  int (*bodyCb)(const pson::Json::Value &root,
      std::string &result); 
   void *arg;
 };

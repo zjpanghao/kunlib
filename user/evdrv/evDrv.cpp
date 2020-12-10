@@ -34,20 +34,20 @@ void EvDrv::startServer(const kunyan::Config &config,
   start(ip, port, threadNum, controls);
 }
 
- bool EvDrv::getBufferJson(evbuffer *buffer, Json::Value &root) {
+ bool EvDrv::getBufferJson(evbuffer *buffer, pson::Json::Value &root) {
    std::string body = getBufferStr(buffer);
    if (body == "") {
      return false;
    }
-   Json::Reader reader(Json::Features::strictMode());
+   pson::Json::Reader reader(pson::Json::Features::strictMode());
    return reader.parse(body, root);
 }
 
 void EvDrv::process(EvHttpRequest *req, 
                     const HttpControl *control) {
     int rc = 0;
-    Json::Value root;
-    Json::Value result;
+    pson::Json::Value root;
+    pson::Json::Value result;
     LOG(INFO) << control->url;
     getQueryJson(req, root);
     if (control->jsonCb) {

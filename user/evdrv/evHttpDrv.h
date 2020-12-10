@@ -9,11 +9,11 @@ struct HttpParam {
 class EvHttpDrv : public EvDrv{
   public:
     static void httpThread(void *param);
-    virtual bool getQueryJson(EvHttpRequest*req, Json::Value &root) override;
+    virtual bool getQueryJson(EvHttpRequest*req, pson::Json::Value &root) override;
     virtual evbuffer *getInputBuffer(EvHttpRequest *req) override;
     virtual void sendResponse(
         EvHttpRequest *req,
-        const Json::Value &value) override;
+        const pson::Json::Value &value) override;
     virtual void sendResponseBody(EvHttpRequest *req,
         const std::string &value) override;
 

@@ -68,7 +68,7 @@ void EvHttpDrv::start(
 }
 
 void EvHttpDrv::sendResponse(EvHttpRequest *req,
-    const Json::Value &value) {
+    const pson::Json::Value &value) {
   std::string s = value.toStyledString();
   evbuffer *response = evbuffer_new();
   evbuffer_add_printf(response, "%s", s.c_str());
@@ -88,7 +88,7 @@ int EvHttpDrv::evReqMethod(EvHttpRequest*req) {
   return evhttp_request_get_command(req->http);
 }
 
-bool EvHttpDrv::getQueryJson(EvHttpRequest*req, Json::Value &root) {
+bool EvHttpDrv::getQueryJson(EvHttpRequest*req, pson::Json::Value &root) {
   if (evReqMethod(req) == EVHTTP_REQ_POST) {
     EvDrv::getBufferJson(
         getInputBuffer(req), 
