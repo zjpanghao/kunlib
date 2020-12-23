@@ -38,6 +38,7 @@ void EvHttpDrv::start(
   for (int i  =0; i < nThread; i++) {
   struct event_base *evbase = event_base_new();
   struct evhttp *http    = evhttp_new(evbase);
+  evhttp_set_timeout(http, 30);
   for (auto &generalControl : controls) {
     auto gcnts = generalControl->getMapping();
     for (auto &control : 

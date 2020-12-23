@@ -89,6 +89,8 @@ void EvHtpDrv::start(
     = event_base_new();
   struct evhtp *htp 
     = evhtp_new(evbase, NULL);
+  struct timeval timeout{30,0};
+  evhtp_set_timeouts(htp, &timeout, &timeout);
   for(auto &generalControl : controls) {
     for(auto &control : generalControl->getMapping()) {
       HttpControl *httpControl = new HttpControl(control);
