@@ -3,12 +3,14 @@
 #include <string>
 #include <mutex>
 #include <memory>
+#include <glog/logging.h>
 class AliConn;
 class AliMail {
  public:
   enum MailState {
     EHLO,
     AUTH,
+    LOGIN_SEND_NAME,
     LOGIN,
     MESSAGE,
     QUIT,
@@ -24,7 +26,7 @@ class AliMail {
   
   AliMail(const std::string &name,
       const std::string &pass);
-
+  ~AliMail();
   int login(const std::string &userName,
           const std::string &pass);
   int init();
@@ -40,7 +42,17 @@ class AliMail {
   void setState(MailState st) {
     state_ = st;
   }
+
+  void setSuccess(bool success) {
+    success_ = success;
+  }
+
+  bool success() {
+    return success_;
+  }
+
  private:
+  bool success_;
   std::unique_ptr<AliConn> conn_{nullptr};
 
   static AliDriver drivers_[] ;

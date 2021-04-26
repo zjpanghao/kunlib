@@ -4,9 +4,10 @@
 #include <memory>
 #include "event2/http.h"
 #include "evhtp/evhtp.h"
-
+namespace pson {
 namespace Json {
  class Value;
+};
 };
 
 class GeneralControl;
@@ -30,12 +31,12 @@ class EvDrv {
        const std::vector<std::shared_ptr<GeneralControl>> &controls);
    virtual ~EvDrv() = default;
   static std::string getBufferStr(struct evbuffer *buf);
-  static bool getBufferJson(struct evbuffer *buf, Json::Value &root);
+  static bool getBufferJson(struct evbuffer *buf, pson::Json::Value &root);
 
  void process(EvHttpRequest *req, 
      const HttpControl *control);
  private:
-  virtual bool getQueryJson(EvHttpRequest*req, Json::Value &root) = 0;
+  virtual bool getQueryJson(EvHttpRequest*req, pson::Json::Value &root) = 0;
    virtual int evReqMethod(EvHttpRequest*req) = 0;
    virtual evbuffer *getInputBuffer(EvHttpRequest *req) = 0;
 
@@ -43,7 +44,7 @@ class EvDrv {
        EvHttpRequest *req,
        const std::string &value) = 0;
    virtual void sendResponse(EvHttpRequest *req,
-       const Json::Value &value) = 0;
+       const pson::Json::Value &value) = 0;
 
    virtual void start(
        const std::string &ip,

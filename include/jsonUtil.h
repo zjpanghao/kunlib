@@ -5,7 +5,7 @@
 class JsonUtil {
   public:
     template <typename T, class = typename std::enable_if<std::is_same<T, std::string>::value>::type>
-    static void getJsonString(const Json::Value &value, const std::string &key, T &t) {
+    static void getJsonString(const pson::Json::Value &value, const std::string &key, T &t) {
       if (value.isNull() 
         || !value.isMember(key) 
         || !value[key].isString()) {
@@ -14,7 +14,7 @@ class JsonUtil {
       t = value[key].asString();
     }
 
-    static void getJsonInt(const Json::Value
+    static void getJsonInt(const pson::Json::Value
         &value, const std::string &key, int &t) {
       if (value.isNull() 
         || !value.isMember(key) 
@@ -24,7 +24,7 @@ class JsonUtil {
       t = value[key].asInt();
     }
     
-    static void getJsonDouble(const Json::Value
+    static void getJsonDouble(const pson::Json::Value
         &value, const std::string &key, double &t) {
       if (value.isNull() 
         || !value.isMember(key) 

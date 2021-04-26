@@ -6,11 +6,11 @@ class EvHtpDrv : public EvDrv{
   public:
     static EvHtpDrv &getDrv();
     static int evkvsCb(evhtp_kv_t * kv, void * arg);
-  virtual bool getQueryJson(EvHttpRequest*req, Json::Value &root) override;
+  virtual bool getQueryJson(EvHttpRequest*req, pson::Json::Value &root) override;
 
     virtual evbuffer *getInputBuffer(EvHttpRequest *req) override;
     virtual void sendResponse(EvHttpRequest *req,
-        const Json::Value &value) override;
+        const pson::Json::Value &value) override;
     virtual void sendResponseBody(EvHttpRequest *req,
         const std::string &value) override;
     virtual void start(

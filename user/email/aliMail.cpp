@@ -5,6 +5,7 @@
 
 static int ehloHandle(const char *info,
     AliMail *m) {
+  LOG(INFO) << "ehlo:" << info;
   if (strstr(info, "DSN")) {
     m->setState(AliMail::MailState::AUTH);
     return 0;
@@ -14,18 +15,35 @@ static int ehloHandle(const char *info,
 
 static int authHandle(const char *info,
     AliMail *m) {
+  m->setState(AliMail::MailState::LOGIN_SEND_NAME);
+  return 0;
+}
+
+static int sendNameHandle(const char *info,
+    AliMail *m) {
+  LOG(INFO) <<"loginSendName:" <<  info;
+  if (!strstr(info, "334")) {
+    m->setState(AliMail::MailState::QUIT);
+    return 0;
+  }
   m->setState(AliMail::MailState::LOGIN);
   return 0;
 }
+
 static int loginHandle(const char *info,
     AliMail *m) {
+  LOG(INFO) <<"login:" <<  info;
   m->setState(AliMail::MailState::MESSAGE);
   return 0;
 }
 static int messageHandle(const char *info,
       AliMail *m) {
     //m->setState(AliMail::MailState::QUIT);
-    return 0;
+  LOG(INFO) << "mess:" << info;
+  if (strstr(info, "Data Ok: queued as freedom")) {
+    m->setSuccess(true); 
+  }
+  return 0;
 }
 
 static int quitHandle(const char *info,
@@ -38,6 +56,7 @@ AliMail::AliDriver AliMail::drivers_[]  =
 {
   {MailState::EHLO, ehloHandle},
   {MailState::AUTH, authHandle},
+  {MailState::LOGIN_SEND_NAME, sendNameHandle},
   {MailState::LOGIN, loginHandle},
   {MailState::MESSAGE, messageHandle},
   {MailState::QUIT, quitHandle},
@@ -46,7 +65,10 @@ AliMail::AliDriver AliMail::drivers_[]  =
 
 int AliMail::login(const std::string &userName,
     const std::string &pass) {
-  conn_->sendMess("AUTH LOGIN\r\n", aliProcess, this);
+  int rc = conn_->sendMess("AUTH LOGIN\r\n", aliProcess, this);
+  if (rc != 0) {
+    return -1;
+  }
   std::string account;
   std::string s = userName;
   std::vector<unsigned char> data(s.begin(), s.end());
@@ -56,8 +78,8 @@ int AliMail::login(const std::string &userName,
   std::string pass64;
   data.assign(s.begin(), s.end());
   Base64::getBase64().encode(data, pass64);
-  conn_->sendMess(pass64.c_str(), aliProcess, this);
-  return 0;
+  rc = conn_->sendMess(pass64.c_str(), aliProcess, this);
+  return rc;
 
 }
 
@@ -73,6 +95,7 @@ int AliMail::init() {
   int rc = 0;
   rc = ehlo();
   if (rc != 0) {
+    LOG(ERROR) << "init failed";
     return -1;
   }
   rc = login(name_, pass_);
@@ -82,20 +105,22 @@ int AliMail::init() {
 int AliMail::sendMail(const std::string &subject,
     const std::string &body,
     const std::string &to) {
-  if (!conn_) {
-    conn_.reset( new AliConn());
+  success_ = false;
+  conn_.reset();
+  if (0 != init()) {
+    return false;
   }
-
-  if (conn_->isClose() || conn_->sentryClose()) {
-    conn_.reset();
-    init();
-  }
-  conn_->sendMess("MAIL FROM:<panghao@221data.com>",
+  int rc = 0;
+  rc = conn_->sendMess("MAIL FROM:<panghao@221data.com>",
       aliProcess, this);
-  conn_->sendMess("RCPT TO:<panghao@221data.com>",
+  if (rc != 0) {
+    return false;
+  }
+  char buf[128];
+  snprintf(buf,sizeof(buf), "RCPT TO:<%s>\r\n", to.c_str());
+  conn_->sendMess(buf,
       aliProcess, this);
   conn_->sendMess( "DATA\r\n", aliProcess, this);
-  char buf[128];
   snprintf(buf,sizeof(buf), "subject:%s\r\n", subject.c_str());
   conn_->sendMess(buf, NULL, NULL);
   snprintf(buf, sizeof(buf), "from:<%s>\r\n", name_.c_str());
@@ -107,12 +132,12 @@ int AliMail::sendMail(const std::string &subject,
   conn_->sendMess(bodyBuf_, aliProcess, this);
   conn_->sendMess("QUIT\r\n", aliProcess, this);
   conn_.reset();
-  return 0;
+  return success_ == true ? 0 : -1;
 }
 
 int AliMail::aliProcess(const char*info,
     AliMail  *m) {
-  std::cout << m->state_ << std::endl;
+  LOG(INFO) << "state to->" << m->state_;
   if (m->drivers_[m->state_].handle) {
     return m->drivers_[m->state_].handle(info, m);
   }

@@ -53,7 +53,7 @@ int readSentry(int sock) {
     FD_ZERO(&rset);
     FD_SET(sock, &rset);
     int rc = select(sock + 1, 
-        &rset, NULL, NULL, NULL);
+        &rset, NULL, NULL, &tv);
     if (rc < 0) {
       return 1;
     } else if (rc == 0) {
